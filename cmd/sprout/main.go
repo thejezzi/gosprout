@@ -1,65 +1,23 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/thejezzi/gosprout/internal"
+	"github.com/thejezzi/gosprout/internal/project"
+	"github.com/thejezzi/gosprout/internal/util"
 )
-
-type Field[T any] struct {
-	name         string
-	value        *T
-	huhRepr      huh.Field
-	descpription string
-	validation   func(T) error
-}
-
-func NewField[T any](name string, value T) *Field[T] {
-	f := Field[T]{name: name, value: &value}
-	repr, ok := huhRepresentation(f.name, f.value, f.descpription)
-	if ok {
-		f.huhRepr = repr
-	}
-	return &f
-}
-
-func (f *Field[T]) Description(s string) *Field[T] {
-	f.descpription = s
-	return f
-}
-
-func huhRepresentation[T any](name string, value *T, descr string) (huh.Field, bool) {
-	switch interface{}(*value).(type) {
-	case string:
-		return huh.NewInput().
-			Title(name).
-			Value(any(value).(*string)).Description(descr), true
-	}
-
-	return nil, false
-}
-
-func (f *Field[T]) String() string {
-	if f.value == nil {
-		return ""
-	}
-	return fmt.Sprintf("%v", *f.value)
-}
-
-type options struct {
-	moduleName *Field[string]
-	foldername *Field[string]
-}
 
 func buildPathPrefix() string {
 	pathSlice := make([]string, 2)
-	pathSlice[0] = internal.EnsureEnv("SPROUT_SCMPROVIDER", "github.com")
-	pathSlice[1] = internal.EnsureEnv("SPROUT_USERNAME", "you")
+	pathSlice[0] = util.EnsureEnv("SPROUT_SCMPROVIDER", "github.com")
+	pathSlice[1] = util.EnsureEnv("SPROUT_USERNAME", "you")
 
-	pathSlice = internal.DiscardEmptyElements(pathSlice)
+	pathSlice = util.DiscardEmptyElements(pathSlice)
 	pathPrefix := strings.Join(pathSlice, "/")
 	if len(pathPrefix) > 0 {
 		pathPrefix += string(filepath.Separator)
@@ -67,16 +25,48 @@ func buildPathPrefix() string {
 	return pathPrefix
 }
 
-func main() {
-	opts := options{
-		moduleName: NewField("module", buildPathPrefix()).Description("Wow"),
-		foldername: NewField("folder", ""),
+func validateModuleName(s string) error {
+	if len(strings.Split(s, " ")) > 1 {
+		return errors.New("must be one word")
 	}
 
+	if strings.Index(s, "/") > 0 {
+		moduleSlice := strings.Split(s, "/")
+		if len(moduleSlice) <= 2 {
+			return errors.New("if you provide a module path min length is 3")
+		}
+
+		if moduleSlice[2] == "" {
+			return errors.New("you have to provide a module name")
+		}
+	}
+
+	return nil
+}
+
+func runUI(module *string) {
+	*module = buildPathPrefix()
 	form := huh.NewForm(
-		huh.NewGroup(opts.moduleName.huhRepr, opts.foldername.huhRepr),
+		huh.NewGroup(
+			huh.NewInput().
+				Title("module").
+				Value(module).
+				Validate(validateModuleName),
+		),
 	)
 
 	_ = form.Run()
-	fmt.Println(opts.moduleName.String(), opts.foldername.String())
+}
+
+func main() {
+	module := flag.String("module", "", "provide a module title")
+	flag.Parse()
+
+	if *module == "" {
+		runUI(module)
+	}
+
+	if err := project.NewSimple(*module); err != nil {
+		fmt.Println(err)
+	}
 }
