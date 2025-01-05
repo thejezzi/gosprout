@@ -27,7 +27,7 @@ func main() {
 type template = string
 
 const (
-	_template_simple template = "simple"
+	_templateSimple template = "simple"
 )
 
 type gomodData []byte
@@ -69,9 +69,9 @@ func (gmd gomodData) WriteToFile(path string) error {
 	return nil
 }
 
-func Run(modulePath, moduleName string, templ template) error {
+func CreateNewModule(modulePath, moduleName string, templ template) error {
 	switch templ {
-	case _template_simple:
+	case _templateSimple:
 		return simple(modulePath, moduleName)
 	}
 	return nil

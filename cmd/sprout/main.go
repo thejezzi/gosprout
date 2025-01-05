@@ -28,7 +28,7 @@ func main() {
 
 	flag.Parse()
 
-	if err := internal.Run(*modulePath, *moduleName, *template); err != nil {
+	if err := internal.CreateNewModule(*modulePath, *moduleName, *template); err != nil {
 		log.Fatalf("failed: %v", err)
 	}
 }
