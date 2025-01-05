@@ -1,8 +1,8 @@
-package util
+package internal
 
 import "os"
 
-func EnsureEnv(key, defaultValue string) string {
+func ensureEnv(key, defaultValue string) string {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		return defaultValue
@@ -10,7 +10,7 @@ func EnsureEnv(key, defaultValue string) string {
 	return value
 }
 
-func DiscardEmptyElements(oldSlice []string) []string {
+func discardEmptyElements(oldSlice []string) []string {
 	newSlice := []string{}
 	for _, elem := range oldSlice {
 		if len(elem) > 0 {
