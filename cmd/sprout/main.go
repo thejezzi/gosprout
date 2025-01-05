@@ -20,9 +20,15 @@ func main() {
 		"the path to put all the files",
 	)
 
+	template := flag.String(
+		"template",
+		"simple",
+		"specify a template to avoid some boilerplate setup",
+	)
+
 	flag.Parse()
 
-	if err := internal.Simple(*modulePath, *moduleName); err != nil {
+	if err := internal.Run(*modulePath, *moduleName, *template); err != nil {
 		log.Fatalf("failed: %v", err)
 	}
 }

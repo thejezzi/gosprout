@@ -30,7 +30,7 @@ func randomString(length int) string {
 }
 
 func TestCreateGoMod(t *testing.T) {
-	gomod, err := createGoMod("testmod")
+	gomod, err := newGoMod("testmod")
 	assert.NoError(t, err)
 	assert.Greater(t, len(gomod), 0)
 
@@ -41,7 +41,7 @@ func TestCreateGoMod(t *testing.T) {
 }
 
 func TestWriteGoModToFile(t *testing.T) {
-	gomod, err := createGoMod("testmod")
+	gomod, err := newGoMod("testmod")
 	assert.NoError(t, err)
 
 	tmpDir := filepath.Join(
@@ -68,7 +68,7 @@ func TestCreateMainGo(t *testing.T) {
 		os.TempDir(),
 		fmt.Sprintf("gosprout_test_%s", randomString(6)),
 	)
-	err := createMainGo(tmpDir)
+	err := newMainGo(tmpDir)
 	assert.NoError(t, err)
 	fileInfo, err := os.Stat(filepath.Join(tmpDir, _mainGoFileName))
 	assert.NoError(t, err)

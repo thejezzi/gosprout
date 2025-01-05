@@ -24,9 +24,15 @@ func main() {
 `
 )
 
+type template = string
+
+const (
+	_template_simple template = "simple"
+)
+
 type gomodData []byte
 
-func createGoMod(moduleName string) (gomodData, error) {
+func newGoMod(moduleName string) (gomodData, error) {
 	modFile := &modfile.File{}
 
 	if err := modFile.AddModuleStmt(moduleName); err != nil {
@@ -63,6 +69,36 @@ func (gmd gomodData) WriteToFile(path string) error {
 	return nil
 }
 
+func Run(modulePath, moduleName string, templ template) error {
+	switch templ {
+	case _template_simple:
+		return simple(modulePath, moduleName)
+	}
+	return nil
+}
+
+func simple(modulePath, moduleName string) error {
+	if err := ensureDir(modulePath); err != nil {
+		return err
+	}
+
+	gomod, err := newGoMod(moduleName)
+	if err != nil {
+		return err
+	}
+	if err := gomod.WriteToFile(modulePath); err != nil {
+		return err
+	}
+
+	basename := path.Base(moduleName)
+	cmdPath := filepath.Join(modulePath, "cmd", basename)
+	if err := newMainGo(cmdPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ensureDir(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return os.MkdirAll(path, 0o755)
@@ -78,7 +114,7 @@ func goVersion() string {
 	return version
 }
 
-func createMainGo(path string) error {
+func newMainGo(path string) error {
 	cleanedPath := filepath.Clean(path)
 	splitted := strings.Split(cleanedPath, "/")
 	if splitted[len(splitted)-1] != _mainGoFileName {
@@ -93,28 +129,6 @@ func createMainGo(path string) error {
 
 	if err := os.WriteFile(mainGoPath, []byte(_mainGoContent), 0o644); err != nil {
 		return fmt.Errorf("failed to write main.go file: %w", err)
-	}
-
-	return nil
-}
-
-func Simple(modulePath, moduleName string) error {
-	if err := ensureDir(modulePath); err != nil {
-		return err
-	}
-
-	gomod, err := createGoMod(moduleName)
-	if err != nil {
-		return err
-	}
-	if err := gomod.WriteToFile(modulePath); err != nil {
-		return err
-	}
-
-	basename := path.Base(moduleName)
-	cmdPath := filepath.Join(modulePath, "cmd", basename)
-	if err := createMainGo(cmdPath); err != nil {
-		return err
 	}
 
 	return nil
