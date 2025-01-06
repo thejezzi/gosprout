@@ -69,29 +69,61 @@ func (gmd gomodData) WriteToFile(path string) error {
 	return nil
 }
 
-func CreateNewModule(modulePath, moduleName string, templ template) error {
-	switch templ {
+// type Options struct {
+// 	path     string
+// 	name     string
+// 	template string
+// }
+//
+// func NewOptions(moduleName, modulePath string, temp template) *Options {
+// 	return &Options{
+// 		path:     modulePath,
+// 		name:     moduleName,
+// 		template: temp,
+// 	}
+// }
+//
+// func (opts Options) Name() string {
+// 	return opts.name
+// }
+//
+// func (opts Options) Path() string {
+// 	return opts.path
+// }
+//
+// func (opts Options) Template() string {
+// 	return opts.template
+// }
+
+type options interface {
+	Name() string
+	Path() string
+	Template() string
+}
+
+func CreateNewModule(opts options) error {
+	switch opts.Template() {
 	case _templateSimple:
-		return simple(modulePath, moduleName)
+		return simple(opts)
 	}
 	return nil
 }
 
-func simple(modulePath, moduleName string) error {
-	if err := ensureDir(modulePath); err != nil {
+func simple(opts options) error {
+	if err := ensureDir(opts.Path()); err != nil {
 		return err
 	}
 
-	gomod, err := newGoMod(moduleName)
+	gomod, err := newGoMod(opts.Name())
 	if err != nil {
 		return err
 	}
-	if err := gomod.WriteToFile(modulePath); err != nil {
+	if err := gomod.WriteToFile(opts.Path()); err != nil {
 		return err
 	}
 
-	basename := path.Base(moduleName)
-	cmdPath := filepath.Join(modulePath, "cmd", basename)
+	basename := path.Base(opts.Name())
+	cmdPath := filepath.Join(opts.Path(), "cmd", basename)
 	if err := newMainGo(cmdPath); err != nil {
 		return err
 	}
