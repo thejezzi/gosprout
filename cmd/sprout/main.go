@@ -78,20 +78,38 @@ func (args arguments) Template() string {
 	return args.template
 }
 
-func ui() (*arguments, error) {
-	return nil, nil
+func (args arguments) IsEmpty() bool {
+	if len(args.name) == 0 {
+		return false
+	}
+	if len(args.path) == 0 {
+		return false
+	}
+	return true
+}
+
+func ui() *arguments {
+	module, projectPath := internal.RunUI()
+	return &arguments{name: module, path: projectPath}
 }
 
 func run() error {
 	args, err := flags()
-	if shouldUseUiMode(err) {
-		args, err = ui()
+	if errors.Is(err, errUiMode) {
+		err = nil
+		args = ui()
+		args.template = "simple"
 	}
-
 	if err != nil {
 		return err
 	}
 
+	if args == nil || !args.IsEmpty() {
+		fmt.Println(args)
+		return errors.New("invalid or empty args")
+	}
+
+	fmt.Println("creating project", args)
 	if err := internal.CreateNewModule(args); err != nil {
 		return err
 	}
@@ -103,8 +121,4 @@ func main() {
 		fmt.Printf("could not create new project: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-func shouldUseUiMode(err error) bool {
-	return err != nil && err == errUiMode
 }
