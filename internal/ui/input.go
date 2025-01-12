@@ -30,6 +30,7 @@ func NewInputModel() inputModel {
 		promptList:       make([]string, 0),
 	}
 
+	im.AppendPrompts("")
 	im.inner.Prompt = ""
 	im.inner.Cursor.SetMode(cursor.CursorBlink)
 	return im
@@ -64,7 +65,7 @@ func (im *inputModel) RotatePrompt() {
 	im.prompt = im.promptList[im.promptIndex]
 }
 
-func (im *inputModel) Prompts(prompts ...string) {
+func (im *inputModel) AppendPrompts(prompts ...string) {
 	im.promptList = append(im.promptList, prompts...)
 	im.prompt = im.promptList[im.promptIndex]
 }

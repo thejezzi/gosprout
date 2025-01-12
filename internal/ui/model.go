@@ -46,7 +46,7 @@ func newModel() *model {
 			t.SetPlaceholder(projectPlaceholder)
 			t.Focus()
 			t.SetInnerTextStyle(focusedStyle)
-			t.Prompts("", "github.com/you/", "bitbucket.org/you/")
+			t.AppendPrompts("github.com/you/", "bitbucket.org/you/")
 		case 1:
 			t.title = "Path"
 			t.description = "The path where to put your project"
@@ -158,7 +158,7 @@ func (m *model) View() string {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "%s\n\n", *button)
-	b.WriteString(helpStyle.Render("ctrl+r to change prompt"))
+	b.WriteString(helpStyle.Render("ctrl+r to change module prefix"))
 
 	return b.String()
 }
