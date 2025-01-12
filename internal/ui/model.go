@@ -2,11 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/thejezzi/gosprout/internal/util"
 )
 
 type model struct {
@@ -21,6 +23,16 @@ func newModel() *model {
 		inputs: make([]inputModel, 2),
 	}
 
+	projectPlaceholder, err := util.RandomSample(util.RandomProject)
+	if err != nil {
+		projectPlaceholder = "yourproject"
+	}
+	randomPath, err := util.RandomSample(util.RandomPath)
+	if err != nil {
+		randomPath = "/path/to/your/project"
+	}
+	pathPlaceholder := filepath.Join(randomPath, projectPlaceholder)
+
 	var t inputModel
 	for i := range m.inputs {
 		t = NewInputModel()
@@ -31,14 +43,14 @@ func newModel() *model {
 		case 0:
 			t.title = "Module"
 			t.description = "Your module path that is used in the go mod file"
-			t.SetPlaceholder("module")
+			t.SetPlaceholder(projectPlaceholder)
 			t.Focus()
 			t.SetInnerTextStyle(focusedStyle)
 			t.Prompts("", "github.com/you/", "bitbucket.org/you/")
 		case 1:
 			t.title = "Path"
 			t.description = "The path where to put your project"
-			t.SetPlaceholder("path")
+			t.SetPlaceholder(pathPlaceholder)
 			t.Focus()
 			t.SetInnerCursorMode(cursor.CursorHide)
 		}
@@ -137,10 +149,8 @@ func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
 
 func (m *model) View() string {
 	var b strings.Builder
-
-	for i := range m.inputs {
-		currentInput := m.inputs[i]
-		b.WriteString(renderInput(currentInput))
+	for _, input := range m.inputs {
+		b.WriteString(renderInput(input))
 	}
 
 	button := &blurredButton
@@ -148,7 +158,6 @@ func (m *model) View() string {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "%s\n\n", *button)
-
 	b.WriteString(helpStyle.Render("ctrl+r to change prompt"))
 
 	return b.String()
