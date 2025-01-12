@@ -10,10 +10,20 @@ import (
 )
 
 func runUI() (*cli.Arguments, error) {
-	module, projectPath, err := ui.Run(
-		ui.WithPrefixes(ui.FieldTitleModule, "github.com/thejezzi/"),
+	form, err := ui.NewForm(
+		ui.Input().
+			Title("module").
+			Description("some description").
+			Value(&someValue).
+			FocusOnStart().
+			WithPrefixes("github.com/thejezzi/"),
+		ui.Input().
+			Title("module").
+			Description("some description").
+			Value(&someValue).
+			FocusOnStart(),
 	)
-	if err != nil {
+	if err := form.Run(); err != nil {
 		return nil, err
 	}
 	return cli.NewArguments(module, projectPath), nil
