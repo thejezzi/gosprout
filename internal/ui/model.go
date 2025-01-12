@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,13 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/thejezzi/gosprout/internal/util"
+)
+
+type FieldTitle string
+
+const (
+	FieldTitleModule FieldTitle = "module"
+	FieldTitlePath   FieldTitle = "path"
 )
 
 type model struct {
@@ -41,14 +49,13 @@ func newModel() *model {
 
 		switch i {
 		case 0:
-			t.title = "Module"
+			t.title = string(FieldTitleModule)
 			t.description = "Your module path that is used in the go mod file"
 			t.SetPlaceholder(projectPlaceholder)
 			t.Focus()
 			t.SetInnerTextStyle(focusedStyle)
-			t.AppendPrompts("github.com/you/", "bitbucket.org/you/")
 		case 1:
-			t.title = "Path"
+			t.title = string(FieldTitlePath)
 			t.description = "The path where to put your project"
 			t.SetPlaceholder(pathPlaceholder)
 			t.Focus()
@@ -59,6 +66,17 @@ func newModel() *model {
 	}
 
 	return &m
+}
+
+var errFieldDoesNotExist = errors.New("field does not exist")
+
+func (m *model) findFieldByTitle(t FieldTitle) (*inputModel, error) {
+	for i := range m.inputs {
+		if m.inputs[i].title == string(t) {
+			return &m.inputs[i], nil
+		}
+	}
+	return nil, errFieldDoesNotExist
 }
 
 func (m *model) Init() tea.Cmd {
