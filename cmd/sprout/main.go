@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/thejezzi/gosprout/internal"
+	"github.com/thejezzi/gosprout/internal/structure"
+	"github.com/thejezzi/gosprout/internal/ui"
 )
 
 var (
@@ -88,16 +89,22 @@ func (args arguments) IsEmpty() bool {
 	return true
 }
 
-func ui() *arguments {
-	module, projectPath := internal.RunUI()
-	return &arguments{name: module, path: projectPath}
+func runUI() (*arguments, error) {
+	module, projectPath, err := ui.Run()
+	if err != nil {
+		return nil, err
+	}
+	return &arguments{name: module, path: projectPath}, nil
 }
 
 func run() error {
 	args, err := flags()
 	if errors.Is(err, errUiMode) {
 		err = nil
-		args = ui()
+		args, err = runUI()
+		if err != nil {
+			return err
+		}
 		args.template = "simple"
 	}
 	if err != nil {
@@ -110,7 +117,7 @@ func run() error {
 	}
 
 	fmt.Println("creating project", args)
-	if err := internal.CreateNewModule(args); err != nil {
+	if err := structure.CreateNewModule(args); err != nil {
 		return err
 	}
 	return nil

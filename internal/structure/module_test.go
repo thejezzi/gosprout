@@ -1,33 +1,15 @@
-package internal
+package structure
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/thejezzi/gosprout/internal/util"
 )
-
-func randomString(length int) string {
-	result := make([]byte, length)
-
-	for i := 0; i < length; i++ {
-		randomType := rand.Intn(3)
-		switch randomType {
-		case 0:
-			result[i] = byte(48 + rand.Intn(10))
-		case 1:
-			result[i] = byte(65 + rand.Intn(26))
-		default:
-			result[i] = byte(97 + rand.Intn(26))
-		}
-	}
-
-	return string(result)
-}
 
 func TestCreateGoMod(t *testing.T) {
 	gomod, err := newGoMod("testmod")
@@ -46,7 +28,7 @@ func TestWriteGoModToFile(t *testing.T) {
 
 	tmpDir := filepath.Join(
 		os.TempDir(),
-		fmt.Sprintf("gosprout_test_%s", randomString(6)),
+		fmt.Sprintf("gosprout_test_%s", util.RandomString(6)),
 	)
 
 	err = gomod.WriteToFile(tmpDir)
@@ -66,7 +48,7 @@ func TestGoVersion(t *testing.T) {
 func TestCreateMainGo(t *testing.T) {
 	tmpDir := filepath.Join(
 		os.TempDir(),
-		fmt.Sprintf("gosprout_test_%s", randomString(6)),
+		fmt.Sprintf("gosprout_test_%s", util.RandomString(6)),
 	)
 	err := newMainGo(tmpDir)
 	assert.NoError(t, err)

@@ -1,4 +1,4 @@
-package internal
+package util
 
 import (
 	"os"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestEnsureEnv(t *testing.T) {
-	randomEnvVar := randomString(12)
+	randomEnvVar := RandomString(12)
 
 	val, ok := os.LookupEnv(randomEnvVar)
 	assert.False(t, ok)
