@@ -15,7 +15,7 @@ type (
 )
 
 func Run() (module, projectPath, error) {
-	m := initialModel()
+	m := newModel()
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Printf("could not start program: %s\n", err)
 		os.Exit(1)

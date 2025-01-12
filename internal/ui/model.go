@@ -16,7 +16,7 @@ type model struct {
 	aborted    bool
 }
 
-func initialModel() *model {
+func newModel() *model {
 	m := model{
 		inputs: make([]inputModel, 2),
 	}
@@ -24,27 +24,23 @@ func initialModel() *model {
 	var t inputModel
 	for i := range m.inputs {
 		t = NewInputModel()
-		t.inner.Cursor.Style = cursorStyle
-		t.inner.CharLimit = 256
+		t.SetInnerCursorStyle(cursorStyle)
+		t.CharLimit(256)
 
 		switch i {
 		case 0:
 			t.title = "Module"
 			t.description = "Your module path that is used in the go mod file"
-			t.inner.Placeholder = "module"
-			t.inner.Focus()
-			t.inner.TextStyle = focusedStyle
-			t.inner.Prompt = ""
-			t.promptList = append(t.promptList, "", "github.com/you/", "bitbucket.org/you/")
-			t.prompt = t.promptList[t.promptIndex]
+			t.SetPlaceholder("module")
+			t.Focus()
+			t.SetInnerTextStyle(focusedStyle)
+			t.Prompts("", "github.com/you/", "bitbucket.org/you/")
 		case 1:
 			t.title = "Path"
 			t.description = "The path where to put your project"
-			t.inner.Placeholder = "path"
-			t.inner.Focus()
-			t.inner.Cursor.SetMode(cursor.CursorHide)
-			t.inner.CharLimit = 256
-			t.inner.Prompt = ""
+			t.SetPlaceholder("path")
+			t.Focus()
+			t.SetInnerCursorMode(cursor.CursorHide)
 		}
 
 		m.inputs[i] = t
@@ -57,86 +53,85 @@ func (m *model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+func (m *model) setAllCursorsBlink() {
+	for i := range m.inputs {
+		m.inputs[i].SetInnerCursorMode(cursor.CursorBlink)
+	}
+}
+
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "esc":
-			m.aborted = true
-			return m, tea.Quit
-
-		case "ctrl+r":
-			cFocused := m.inputs[m.focusIndex]
-			cFocused.promptIndex++
-
-			if cFocused.promptIndex > len(cFocused.promptList)-1 {
-				cFocused.promptIndex = 0
-			}
-			cFocused.prompt = cFocused.promptList[cFocused.promptIndex]
-			m.inputs[m.focusIndex] = cFocused
-
-		// Set focus to next input
-		case "tab", "shift+tab", "enter", "up", "down":
-			s := msg.String()
-			if s == "enter" && m.focusIndex == len(m.inputs) {
-				return m, tea.Quit
-			}
-
-			if s == "up" || s == "shift+tab" {
-				m.focusIndex--
-			} else {
-				m.setCursorModeBlink()
-				m.focusIndex++
-			}
-
-			if m.focusIndex > len(m.inputs) {
-				m.focusIndex = 0
-			} else if m.focusIndex < 0 {
-				m.focusIndex = len(m.inputs)
-			}
-
-			cmds := make([]tea.Cmd, len(m.inputs))
-			for i := 0; i <= len(m.inputs)-1; i++ {
-				if i == m.focusIndex {
-					// Set focused state
-					cmds[i] = m.inputs[i].inner.Focus()
-					m.inputs[i].inner.PromptStyle = focusedStyle
-					m.inputs[i].inner.TextStyle = focusedStyle
-					continue
-				}
-				// Remove focused state
-				m.inputs[i].inner.Blur()
-				m.inputs[i].inner.PromptStyle = noStyle
-				m.inputs[i].inner.TextStyle = noStyle
-			}
-
-			return m, tea.Batch(cmds...)
-		}
+	keyMsg, ok := msg.(tea.KeyMsg)
+	if !ok {
+		cmd := m.updateInputs(msg)
+		return m, cmd
 	}
 
-	// Handle character input and blinking
-	cmd := m.updateInputs(msg)
+	switch keyMsg.String() {
+	case "ctrl+c", "esc":
+		m.aborted = true
+		return m, tea.Quit
 
+	case "ctrl+r":
+		m.inputs[m.focusIndex].RotatePrompt()
+		cmd := m.updateInputs(msg)
+		return m, cmd
+
+	// Set focus to next input
+	case "tab", "shift+tab", "enter", "up", "down":
+		return m.focusNext(keyMsg)
+	}
+
+	cmd := m.updateInputs(msg)
 	return m, cmd
 }
 
-func (m *model) setCursorModeBlink() {
-	for i := range m.inputs {
-		m.inputs[i].inner.Cursor.SetMode(cursor.CursorBlink)
+func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
+	s := msg.String()
+	if s == "enter" && m.focusIndex == len(m.inputs) {
+		return m, tea.Quit
 	}
+
+	if s == "up" || s == "shift+tab" {
+		m.focusIndex--
+	} else {
+		m.setAllCursorsBlink()
+		m.focusIndex++
+	}
+
+	if m.focusIndex > len(m.inputs) {
+		m.focusIndex = 0
+	} else if m.focusIndex < 0 {
+		m.focusIndex = len(m.inputs)
+	}
+
+	return m, tea.Batch(m.evaluateFocusStyles()...)
 }
 
+func (m *model) evaluateFocusStyles() []tea.Cmd {
+	cmds := make([]tea.Cmd, len(m.inputs))
+	for i := 0; i <= len(m.inputs)-1; i++ {
+		if i == m.focusIndex {
+			// Set focused state
+			cmds[i] = m.inputs[i].Focus()
+			m.inputs[i].SetInnerPromptStyle(focusedStyle)
+			m.inputs[i].SetInnerTextStyle(focusedStyle)
+			continue
+		}
+		// Remove focused state
+		m.inputs[i].Blur()
+		m.inputs[i].SetInnerPromptStyle(noStyle)
+		m.inputs[i].SetInnerPromptStyle(noStyle)
+	}
+	return cmds
+}
+
+// updateInputs updates the inner textinput elements and nothing more.
 func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
 	cmds := make([]tea.Cmd, len(m.inputs))
-
-	// Only text inputs with Focus() set will respond, so it's safe to simply
-	// update all of them here without any further logic.
-	for i := range m.inputs {
-		innerInput, cmd := m.inputs[i].inner.Update(msg)
-		cmds[i] = cmd
-		m.inputs[i].inner = innerInput
+	for i, input := range m.inputs {
+		cmds[i] = input.UpdateInner(msg)
+		m.inputs[i] = input
 	}
-
 	return tea.Batch(cmds...)
 }
 
