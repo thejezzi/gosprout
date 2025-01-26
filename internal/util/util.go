@@ -4,9 +4,6 @@ import (
 	"errors"
 	"math/rand"
 	"os"
-	"strings"
-
-	static "github.com/thejezzi/gosprout"
 )
 
 var (
@@ -48,41 +45,4 @@ func RandomString(length int) string {
 	}
 
 	return string(result)
-}
-
-type wordIndex = int
-
-const (
-	RandomProject wordIndex = iota
-	RandomPath
-)
-
-func GetWordList(index wordIndex) ([]string, error) {
-	lists := strings.Split(static.RandomNames, "\n\n")
-	if len(lists) < 2 {
-		return []string{}, errNoWordLists
-	}
-	list := strings.Split(lists[int(index)], "\n")
-
-	cleaned := []string{}
-	for _, word := range list {
-		if word != "" {
-			cleaned = append(cleaned, word)
-		}
-	}
-
-	if len(cleaned) == 0 {
-		return []string{}, errNoWordsAvailable
-	}
-
-	return cleaned, nil
-}
-
-func RandomSample(i wordIndex) (string, error) {
-	list, err := GetWordList(i)
-	if err != nil {
-		return "", err
-	}
-	randomIndex := rand.Intn(len(list))
-	return list[randomIndex], nil
 }

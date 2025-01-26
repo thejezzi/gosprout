@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"os"
 
 	"github.com/thejezzi/gosprout/cmd/sprout/cli"
 	"github.com/thejezzi/gosprout/internal/structure"
@@ -10,24 +10,38 @@ import (
 )
 
 func runUI() (*cli.Arguments, error) {
-	module, projectPath, err := ui.Run(
-		ui.WithPrefixes(ui.FieldTitleModule, "github.com/thejezzi/"),
+	var module, projectPath string
+	err := ui.Form(
+		ui.Input().
+			Title("module").
+			Placeholder("you-awesome-module").
+			Prompt("github.com/thejezzi/").
+			Value(&module),
+		ui.Input().
+			Title("path").
+			Placeholder("somewhere/to/put/project").
+			Prompt("~/tmp/").
+			FocusOnStart().
+			Value(&projectPath),
 	)
 	if err != nil {
 		return nil, err
 	}
+
 	return cli.NewArguments(module, projectPath), nil
 }
 
 func run() error {
-	args, err := cli.Flags()
-	if errors.Is(err, cli.ErrUiMode) {
-		err = nil
+	var args *cli.Arguments
+	var err error
+
+	if len(os.Args) > 1 {
+		args, err = cli.Flags()
+	} else {
 		args, err = runUI()
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
+	}
+
+	if err != nil {
 		return err
 	}
 

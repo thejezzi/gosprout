@@ -3,13 +3,11 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/thejezzi/gosprout/internal/util"
 )
 
 type FieldTitle string
@@ -19,53 +17,36 @@ const (
 	FieldTitlePath   FieldTitle = "path"
 )
 
+var ErrFieldIsNotAnInputModel = errors.New("field is not an input model")
+
 type model struct {
 	focusIndex int
-	inputs     []inputModel
+	inputs     []*inputModel
 	cursorMode cursor.Mode
 	aborted    bool
 }
 
-func newModel() *model {
+func newModel(fields ...InputField) (*model, error) {
 	m := model{
-		inputs: make([]inputModel, 2),
+		inputs: make([]*inputModel, len(fields)),
 	}
 
-	projectPlaceholder, err := util.RandomSample(util.RandomProject)
-	if err != nil {
-		projectPlaceholder = "yourproject"
-	}
-	randomPath, err := util.RandomSample(util.RandomPath)
-	if err != nil {
-		randomPath = "/path/to/your/project"
-	}
-	pathPlaceholder := filepath.Join(randomPath, projectPlaceholder)
-
-	var t inputModel
-	for i := range m.inputs {
-		t = NewInputModel()
-		t.SetInnerCursorStyle(cursorStyle)
-		t.CharLimit(256)
-
-		switch i {
-		case 0:
-			t.title = string(FieldTitleModule)
-			t.description = "Your module path that is used in the go mod file"
-			t.SetPlaceholder(projectPlaceholder)
-			t.Focus()
-			t.SetInnerTextStyle(focusedStyle)
-		case 1:
-			t.title = string(FieldTitlePath)
-			t.description = "The path where to put your project"
-			t.SetPlaceholder(pathPlaceholder)
-			t.Focus()
-			t.SetInnerCursorMode(cursor.CursorHide)
+	for i, field := range fields {
+		input, ok := field.(*inputModel)
+		if !ok {
+			return nil, ErrFieldIsNotAnInputModel
+		}
+		if i == 0 {
+			input.Focus()
+			input.SetInnerTextStyle(focusedStyle)
 		}
 
-		m.inputs[i] = t
+		input.SetInnerCursorStyle(cursorStyle)
+		input.CharLimit(256)
+		m.inputs[i] = input
 	}
 
-	return &m
+	return &m, nil
 }
 
 var errFieldDoesNotExist = errors.New("field does not exist")
@@ -73,7 +54,7 @@ var errFieldDoesNotExist = errors.New("field does not exist")
 func (m *model) findFieldByTitle(t FieldTitle) (*inputModel, error) {
 	for i := range m.inputs {
 		if m.inputs[i].title == string(t) {
-			return &m.inputs[i], nil
+			return m.inputs[i], nil
 		}
 	}
 	return nil, errFieldDoesNotExist
@@ -181,7 +162,7 @@ func (m *model) View() string {
 	return b.String()
 }
 
-func renderInput(input inputModel) string {
+func renderInput(input *inputModel) string {
 	b := strings.Builder{}
 	// title
 	b.WriteString(input.titleStyle.Render(input.title))
