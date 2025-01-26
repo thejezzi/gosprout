@@ -49,48 +49,6 @@ func newModel(fields ...InputField) (*model, error) {
 	return &m, nil
 }
 
-// func newModel_old() *model {
-// 	m := model{
-// 		inputs: make([]*inputModel, 2),
-// 	}
-//
-// 	projectPlaceholder, err := util.RandomSample(util.RandomProject)
-// 	if err != nil {
-// 		projectPlaceholder = "yourproject"
-// 	}
-// 	randomPath, err := util.RandomSample(util.RandomPath)
-// 	if err != nil {
-// 		randomPath = "/path/to/your/project"
-// 	}
-// 	pathPlaceholder := filepath.Join(randomPath, projectPlaceholder)
-//
-// 	var t inputModel
-// 	for i := range m.inputs {
-// 		t = newInputModel()
-// 		t.SetInnerCursorStyle(cursorStyle)
-// 		t.CharLimit(256)
-//
-// 		switch i {
-// 		case 0:
-// 			t.title = string(FieldTitleModule)
-// 			t.description = "Your module path that is used in the go mod file"
-// 			t.SetPlaceholder(projectPlaceholder)
-// 			t.Focus()
-// 			t.SetInnerTextStyle(focusedStyle)
-// 		case 1:
-// 			t.title = string(FieldTitlePath)
-// 			t.description = "The path where to put your project"
-// 			t.SetPlaceholder(pathPlaceholder)
-// 			t.Focus()
-// 			t.SetInnerCursorMode(cursor.CursorHide)
-// 		}
-//
-// 		m.inputs[i] = &t
-// 	}
-//
-// 	return &m
-// }
-
 var errFieldDoesNotExist = errors.New("field does not exist")
 
 func (m *model) findFieldByTitle(t FieldTitle) (*inputModel, error) {

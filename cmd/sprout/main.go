@@ -14,11 +14,13 @@ func runUI() (*cli.Arguments, error) {
 	err := ui.Form(
 		ui.Input().
 			Title("module").
-			Description("go module").
+			Placeholder("you-awesome-module").
+			Prompt("github.com/thejezzi/").
 			Value(&module),
 		ui.Input().
 			Title("path").
-			Description("the path").
+			Placeholder("somewhere/to/put/project").
+			Prompt("~/tmp/").
 			FocusOnStart().
 			Value(&projectPath),
 	)

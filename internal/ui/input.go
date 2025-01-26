@@ -13,6 +13,7 @@ type InputField interface {
 	Prompt(...string) InputField
 	FocusOnStart() InputField
 	Value(*string) InputField
+	Placeholder(s string) InputField
 }
 
 func Input() InputField {
@@ -94,11 +95,15 @@ func (im *inputModel) Focus() tea.Cmd {
 	return im.inner.Focus()
 }
 
-func (im *inputModel) SetPlaceholder(p string) {
+func (im *inputModel) Placeholder(p string) InputField {
 	im.inner.Placeholder = p
+	return im
 }
 
 func (im *inputModel) RotatePrompt() {
+	if len(im.promptList) == 0 {
+		return
+	}
 	im.promptIndex++
 
 	if im.promptIndex > len(im.promptList)-1 {
@@ -118,7 +123,7 @@ func (im *inputModel) SetInnerCursorStyle(s lipgloss.Style) {
 
 func (im *inputModel) UpdateInner(msg tea.Msg) tea.Cmd {
 	updated, cmd := im.inner.Update(msg)
-	*im.value = updated.Value()
+	*im.value = im.prompt + updated.Value()
 	im.inner = updated
 	return cmd
 }
