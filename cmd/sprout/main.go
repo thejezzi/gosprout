@@ -23,7 +23,7 @@ func runUI() (*cli.Arguments, error) {
 			Prompt("~/tmp/").
 			FocusOnStart().
 			Value(&projectPath),
-		ui.List(),
+		ui.List().Title("myList"),
 	)
 	if err != nil {
 		return nil, err

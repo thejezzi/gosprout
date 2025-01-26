@@ -21,43 +21,24 @@ var ErrFieldIsNotAnInputModel = errors.New("field is not an input model")
 
 type model struct {
 	focusIndex int
-	fields     []*inputModel
+	fields     []Field
 	cursorMode cursor.Mode
 	aborted    bool
 }
 
 func newModel(fields ...Field) (*model, error) {
 	m := model{
-		fields: make([]*inputModel, len(fields)),
+		fields: make([]Field, len(fields)),
 	}
 
 	for i, field := range fields {
-		input, ok := field.(*inputModel)
-		if !ok {
-			return nil, ErrFieldIsNotAnInputModel
-		}
 		if i == 0 {
-			input.Focus()
-			input.SetInnerTextStyle(focusedStyle)
+			field.focus()
 		}
-
-		input.SetInnerCursorStyle(cursorStyle)
-		input.CharLimit(256)
-		m.fields[i] = input
+		m.fields[i] = field
 	}
 
 	return &m, nil
-}
-
-var errFieldDoesNotExist = errors.New("field does not exist")
-
-func (m *model) findFieldByTitle(t FieldTitle) (*inputModel, error) {
-	for i := range m.fields {
-		if m.fields[i].title == string(t) {
-			return m.fields[i], nil
-		}
-	}
-	return nil, errFieldDoesNotExist
 }
 
 func (m *model) Init() tea.Cmd {
@@ -65,15 +46,23 @@ func (m *model) Init() tea.Cmd {
 }
 
 func (m *model) setAllCursorsBlink() {
-	for i := range m.fields {
-		m.fields[i].SetInnerCursorMode(cursor.CursorBlink)
+	for _, field := range m.fields {
+		input, ok := field.(*inputModel)
+		if !ok {
+			continue
+		}
+		input.SetInnerCursorMode(cursor.CursorBlink)
 	}
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if msg, ok := msg.(tea.KeyMsg); !ok {
+		return m.handleButKeyMsg(msg)
+	}
+
 	keyMsg, ok := msg.(tea.KeyMsg)
 	if !ok {
-		cmd := m.updateInputs(msg)
+		cmd := m.updateFields(msg)
 		return m, cmd
 	}
 
@@ -83,24 +72,42 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "ctrl+r":
-		m.fields[m.focusIndex].RotatePrompt()
-		cmd := m.updateInputs(msg)
+		input, ok := m.fields[m.focusIndex].(*inputModel)
+		if !ok {
+			break
+		}
+		input.rotatePrompt()
+		cmd := m.updateFields(msg)
 		return m, cmd
 
 	// Set focus to next input
-	case "tab", "shift+tab", "enter", "up", "down":
+	case "tab", "shift+tab", "up", "down":
 		return m.focusNext(keyMsg)
+	case "enter":
+		if m.focusIndex == len(m.fields) {
+			return m, tea.Quit
+		}
 	}
 
-	cmd := m.updateInputs(msg)
+	cmd := m.updateFields(msg)
 	return m, cmd
+}
+
+func (m *model) handleButKeyMsg(msg tea.Msg) (*model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		for _, field := range m.fields {
+			if list, ok := field.(*listModel); ok {
+				list.setWidth(msg.Width)
+			}
+		}
+	}
+
+	return m, m.updateFields(msg)
 }
 
 func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 	s := msg.String()
-	if s == "enter" && m.focusIndex == len(m.fields) {
-		return m, tea.Quit
-	}
 
 	if s == "up" || s == "shift+tab" {
 		m.focusIndex--
@@ -120,28 +127,24 @@ func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 
 func (m *model) evaluateFocusStyles() []tea.Cmd {
 	cmds := make([]tea.Cmd, len(m.fields))
-	for i := 0; i <= len(m.fields)-1; i++ {
+	for i, field := range m.fields {
 		if i == m.focusIndex {
-			// Set focused state
-			cmds[i] = m.fields[i].Focus()
-			m.fields[i].SetInnerPromptStyle(focusedStyle)
-			m.fields[i].SetInnerTextStyle(focusedStyle)
+			cmds[i] = field.focus()
 			continue
 		}
 		// Remove focused state
-		m.fields[i].Blur()
-		m.fields[i].SetInnerPromptStyle(noStyle)
-		m.fields[i].SetInnerPromptStyle(noStyle)
+		field.blur()
 	}
 	return cmds
 }
 
-// updateInputs updates the inner textinput elements and nothing more.
-func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
+// updateFields updates the inner textinput elements and nothing more.
+func (m *model) updateFields(msg tea.Msg) tea.Cmd {
 	cmds := make([]tea.Cmd, len(m.fields))
-	for i, input := range m.fields {
-		cmds[i] = input.UpdateInner(msg)
-		m.fields[i] = input
+	for i, field := range m.fields {
+		if field.isFocused() {
+			cmds[i] = field.update(msg)
+		}
 	}
 	return tea.Batch(cmds...)
 }

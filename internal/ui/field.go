@@ -1,5 +1,7 @@
 package ui
 
+import tea "github.com/charmbracelet/bubbletea"
+
 type Field interface {
 	Title(string) Field
 	Description(string) Field
@@ -8,5 +10,10 @@ type Field interface {
 	Value(*string) Field
 	Placeholder(s string) Field
 
+	getTitle() string
+	focus() tea.Cmd
+	blur()
+	update(tea.Msg) tea.Cmd
+	isFocused() bool
 	render() string
 }

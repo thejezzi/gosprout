@@ -40,6 +40,8 @@ func newInputModel() inputModel {
 		promptList:       make([]string, 0),
 	}
 
+	im.SetInnerCursorStyle(cursorStyle)
+	im.CharLimit(256)
 	im.AppendPrompts("")
 	im.inner.Prompt = ""
 	im.inner.Cursor.SetMode(cursor.CursorBlink)
@@ -51,13 +53,17 @@ func (im *inputModel) Title(s string) Field {
 	return im
 }
 
+func (im *inputModel) getTitle() string {
+	return im.title
+}
+
 func (im *inputModel) Description(desc string) Field {
 	im.description = desc
 	return im
 }
 
 func (im *inputModel) FocusOnStart() Field {
-	im.Focus()
+	im.focus()
 	im.SetInnerCursorMode(cursor.CursorHide)
 	return im
 }
@@ -84,7 +90,9 @@ func (im *inputModel) SetInnerTextStyle(s lipgloss.Style) {
 	im.inner.TextStyle = s
 }
 
-func (im *inputModel) Focus() tea.Cmd {
+func (im *inputModel) focus() tea.Cmd {
+	im.SetInnerPromptStyle(focusedStyle)
+	im.SetInnerTextStyle(focusedStyle)
 	return im.inner.Focus()
 }
 
@@ -93,7 +101,7 @@ func (im *inputModel) Placeholder(p string) Field {
 	return im
 }
 
-func (im *inputModel) RotatePrompt() {
+func (im *inputModel) rotatePrompt() {
 	if len(im.promptList) == 0 {
 		return
 	}
@@ -114,7 +122,7 @@ func (im *inputModel) SetInnerCursorStyle(s lipgloss.Style) {
 	im.inner.Cursor.Style = s
 }
 
-func (im *inputModel) UpdateInner(msg tea.Msg) tea.Cmd {
+func (im *inputModel) update(msg tea.Msg) tea.Cmd {
 	updated, cmd := im.inner.Update(msg)
 	*im.value = im.prompt + updated.Value()
 	im.inner = updated
@@ -125,7 +133,8 @@ func (im *inputModel) SetInnerPromptStyle(s lipgloss.Style) {
 	im.inner.PromptStyle = s
 }
 
-func (im *inputModel) Blur() {
+func (im *inputModel) blur() {
+	im.SetInnerPromptStyle(noStyle)
 	im.inner.Blur()
 }
 
@@ -147,4 +156,8 @@ func (im *inputModel) render() string {
 	b.WriteRune('\n')
 
 	return b.String()
+}
+
+func (im *inputModel) isFocused() bool {
+	return im.inner.Focused()
 }
