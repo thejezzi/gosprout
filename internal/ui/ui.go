@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func Form(fields ...InputField) error {
+func Form(fields ...Field) error {
 	m, err := newModel(fields...)
 	if err != nil {
 		return err

@@ -21,14 +21,14 @@ var ErrFieldIsNotAnInputModel = errors.New("field is not an input model")
 
 type model struct {
 	focusIndex int
-	inputs     []*inputModel
+	fields     []*inputModel
 	cursorMode cursor.Mode
 	aborted    bool
 }
 
-func newModel(fields ...InputField) (*model, error) {
+func newModel(fields ...Field) (*model, error) {
 	m := model{
-		inputs: make([]*inputModel, len(fields)),
+		fields: make([]*inputModel, len(fields)),
 	}
 
 	for i, field := range fields {
@@ -43,7 +43,7 @@ func newModel(fields ...InputField) (*model, error) {
 
 		input.SetInnerCursorStyle(cursorStyle)
 		input.CharLimit(256)
-		m.inputs[i] = input
+		m.fields[i] = input
 	}
 
 	return &m, nil
@@ -52,9 +52,9 @@ func newModel(fields ...InputField) (*model, error) {
 var errFieldDoesNotExist = errors.New("field does not exist")
 
 func (m *model) findFieldByTitle(t FieldTitle) (*inputModel, error) {
-	for i := range m.inputs {
-		if m.inputs[i].title == string(t) {
-			return m.inputs[i], nil
+	for i := range m.fields {
+		if m.fields[i].title == string(t) {
+			return m.fields[i], nil
 		}
 	}
 	return nil, errFieldDoesNotExist
@@ -65,8 +65,8 @@ func (m *model) Init() tea.Cmd {
 }
 
 func (m *model) setAllCursorsBlink() {
-	for i := range m.inputs {
-		m.inputs[i].SetInnerCursorMode(cursor.CursorBlink)
+	for i := range m.fields {
+		m.fields[i].SetInnerCursorMode(cursor.CursorBlink)
 	}
 }
 
@@ -83,7 +83,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "ctrl+r":
-		m.inputs[m.focusIndex].RotatePrompt()
+		m.fields[m.focusIndex].RotatePrompt()
 		cmd := m.updateInputs(msg)
 		return m, cmd
 
@@ -98,7 +98,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 	s := msg.String()
-	if s == "enter" && m.focusIndex == len(m.inputs) {
+	if s == "enter" && m.focusIndex == len(m.fields) {
 		return m, tea.Quit
 	}
 
@@ -109,75 +109,55 @@ func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 		m.focusIndex++
 	}
 
-	if m.focusIndex > len(m.inputs) {
+	if m.focusIndex > len(m.fields) {
 		m.focusIndex = 0
 	} else if m.focusIndex < 0 {
-		m.focusIndex = len(m.inputs)
+		m.focusIndex = len(m.fields)
 	}
 
 	return m, tea.Batch(m.evaluateFocusStyles()...)
 }
 
 func (m *model) evaluateFocusStyles() []tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
-	for i := 0; i <= len(m.inputs)-1; i++ {
+	cmds := make([]tea.Cmd, len(m.fields))
+	for i := 0; i <= len(m.fields)-1; i++ {
 		if i == m.focusIndex {
 			// Set focused state
-			cmds[i] = m.inputs[i].Focus()
-			m.inputs[i].SetInnerPromptStyle(focusedStyle)
-			m.inputs[i].SetInnerTextStyle(focusedStyle)
+			cmds[i] = m.fields[i].Focus()
+			m.fields[i].SetInnerPromptStyle(focusedStyle)
+			m.fields[i].SetInnerTextStyle(focusedStyle)
 			continue
 		}
 		// Remove focused state
-		m.inputs[i].Blur()
-		m.inputs[i].SetInnerPromptStyle(noStyle)
-		m.inputs[i].SetInnerPromptStyle(noStyle)
+		m.fields[i].Blur()
+		m.fields[i].SetInnerPromptStyle(noStyle)
+		m.fields[i].SetInnerPromptStyle(noStyle)
 	}
 	return cmds
 }
 
 // updateInputs updates the inner textinput elements and nothing more.
 func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
-	for i, input := range m.inputs {
+	cmds := make([]tea.Cmd, len(m.fields))
+	for i, input := range m.fields {
 		cmds[i] = input.UpdateInner(msg)
-		m.inputs[i] = input
+		m.fields[i] = input
 	}
 	return tea.Batch(cmds...)
 }
 
 func (m *model) View() string {
 	var b strings.Builder
-	for _, input := range m.inputs {
-		b.WriteString(renderInput(input))
+	for _, input := range m.fields {
+		b.WriteString(input.render())
 	}
 
 	button := &blurredButton
-	if m.focusIndex == len(m.inputs) {
+	if m.focusIndex == len(m.fields) {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "%s\n\n", *button)
 	b.WriteString(helpStyle.Render("ctrl+r to change module prefix"))
-
-	return b.String()
-}
-
-func renderInput(input *inputModel) string {
-	b := strings.Builder{}
-	// title
-	b.WriteString(input.titleStyle.Render(input.title))
-	b.WriteRune('\n')
-	// the actual input
-	input.inner.TextStyle = noStyle
-	b.WriteString("> ")
-	b.WriteString(input.promptStyle.Render(input.prompt))
-	b.WriteString(input.inner.View())
-	b.WriteRune('\n')
-	if len(input.description) > 0 {
-		b.WriteString(input.descriptionStyle.Render(input.description))
-		b.WriteRune('\n')
-	}
-	b.WriteRune('\n')
 
 	return b.String()
 }

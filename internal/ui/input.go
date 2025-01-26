@@ -1,22 +1,15 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type InputField interface {
-	Title(string) InputField
-	Description(string) InputField
-	Prompt(...string) InputField
-	FocusOnStart() InputField
-	Value(*string) InputField
-	Placeholder(s string) InputField
-}
-
-func Input() InputField {
+func Input() Field {
 	im := newInputModel()
 	return &im
 }
@@ -53,28 +46,28 @@ func newInputModel() inputModel {
 	return im
 }
 
-func (im *inputModel) Title(s string) InputField {
+func (im *inputModel) Title(s string) Field {
 	im.title = s
 	return im
 }
 
-func (im *inputModel) Description(desc string) InputField {
+func (im *inputModel) Description(desc string) Field {
 	im.description = desc
 	return im
 }
 
-func (im *inputModel) FocusOnStart() InputField {
+func (im *inputModel) FocusOnStart() Field {
 	im.Focus()
 	im.SetInnerCursorMode(cursor.CursorHide)
 	return im
 }
 
-func (im *inputModel) Prompt(prompts ...string) InputField {
+func (im *inputModel) Prompt(prompts ...string) Field {
 	im.promptList = append(im.promptList, prompts...)
 	return im
 }
 
-func (im *inputModel) Value(v *string) InputField {
+func (im *inputModel) Value(v *string) Field {
 	im.value = v
 	return im
 }
@@ -95,7 +88,7 @@ func (im *inputModel) Focus() tea.Cmd {
 	return im.inner.Focus()
 }
 
-func (im *inputModel) Placeholder(p string) InputField {
+func (im *inputModel) Placeholder(p string) Field {
 	im.inner.Placeholder = p
 	return im
 }
@@ -134,4 +127,24 @@ func (im *inputModel) SetInnerPromptStyle(s lipgloss.Style) {
 
 func (im *inputModel) Blur() {
 	im.inner.Blur()
+}
+
+func (im *inputModel) render() string {
+	b := strings.Builder{}
+	// title
+	b.WriteString(im.titleStyle.Render(im.title))
+	b.WriteRune('\n')
+	// the actual input
+	im.inner.TextStyle = noStyle
+	b.WriteString("> ")
+	b.WriteString(im.promptStyle.Render(im.prompt))
+	b.WriteString(im.inner.View())
+	b.WriteRune('\n')
+	if len(im.description) > 0 {
+		b.WriteString(im.descriptionStyle.Render(im.description))
+		b.WriteRune('\n')
+	}
+	b.WriteRune('\n')
+
+	return b.String()
 }
