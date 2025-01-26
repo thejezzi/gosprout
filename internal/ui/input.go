@@ -7,6 +7,19 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type InputField interface {
+	Title(string) InputField
+	Description(string) InputField
+	Prompt(...string) InputField
+	FocusOnStart() InputField
+	Value(*string) InputField
+}
+
+func Input() InputField {
+	im := newInputModel()
+	return &im
+}
+
 type inputModel struct {
 	title            string
 	titleStyle       lipgloss.Style
@@ -17,11 +30,14 @@ type inputModel struct {
 	promptIndex      int
 	promptList       []string
 	promptStyle      lipgloss.Style
+	focusOnStart     bool
+
+	value *string
 
 	validation func(string) error
 }
 
-func NewInputModel() inputModel {
+func newInputModel() inputModel {
 	im := inputModel{
 		titleStyle:       titleStyle,
 		descriptionStyle: helpStyle,
@@ -33,6 +49,32 @@ func NewInputModel() inputModel {
 	im.AppendPrompts("")
 	im.inner.Prompt = ""
 	im.inner.Cursor.SetMode(cursor.CursorBlink)
+	return im
+}
+
+func (im *inputModel) Title(s string) InputField {
+	im.title = s
+	return im
+}
+
+func (im *inputModel) Description(desc string) InputField {
+	im.description = desc
+	return im
+}
+
+func (im *inputModel) FocusOnStart() InputField {
+	im.Focus()
+	im.SetInnerCursorMode(cursor.CursorHide)
+	return im
+}
+
+func (im *inputModel) Prompt(prompts ...string) InputField {
+	im.promptList = append(im.promptList, prompts...)
+	return im
+}
+
+func (im *inputModel) Value(v *string) InputField {
+	im.value = v
 	return im
 }
 
@@ -76,6 +118,7 @@ func (im *inputModel) SetInnerCursorStyle(s lipgloss.Style) {
 
 func (im *inputModel) UpdateInner(msg tea.Msg) tea.Cmd {
 	updated, cmd := im.inner.Update(msg)
+	*im.value = updated.Value()
 	im.inner = updated
 	return cmd
 }
