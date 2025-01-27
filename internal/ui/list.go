@@ -8,6 +8,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type ListField interface {
+	Field
+
+	SetItems(...list.Item) ListField
+}
+
 type item struct {
 	title, desc string
 }
@@ -16,8 +22,12 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
-func List() Field {
+func List() ListField {
 	return newListModel()
+}
+
+func ListItem(title, desc string) list.Item {
+	return item{title, desc}
 }
 
 type listModel struct {
@@ -25,49 +35,35 @@ type listModel struct {
 	items     []list.Item
 	focused   bool
 
-	inner *list.Model
+	inner      *list.Model
+	outerValue *string
 }
 
 func newListModel() *listModel {
 	newlist := list.New(
-		[]list.Item{
-			item{title: "Raspberry Pi’s", desc: "I have ’em all over my house"},
-			item{title: "Nutella", desc: "It's good on toast"},
-			item{title: "Bitter melon", desc: "It cools you down"},
-			item{title: "Nice socks", desc: "And by that I mean socks without holes"},
-			item{title: "Eight hours of sleep", desc: "I had this once"},
-			item{title: "Cats", desc: "Usually"},
-			item{title: "Plantasia, the album", desc: "My plants love it too"},
-			item{title: "Pour over coffee", desc: "It takes forever to make though"},
-			item{title: "VR", desc: "Virtual reality...what is there to say?"},
-			item{title: "Noguchi Lamps", desc: "Such pleasing organic forms"},
-			item{title: "Linux", desc: "Pretty much the best OS"},
-			item{title: "Business school", desc: "Just kidding"},
-			item{title: "Pottery", desc: "Wet clay is a great feeling"},
-			item{title: "Shampoo", desc: "Nothing like clean hair"},
-			item{title: "Table tennis", desc: "It’s surprisingly exhausting"},
-			item{title: "Milk crates", desc: "Great for packing in your extra stuff"},
-			item{title: "Afternoon tea", desc: "Especially the tea sandwich part"},
-			item{title: "Stickers", desc: "The thicker the vinyl the better"},
-			item{title: "20° Weather", desc: "Celsius, not Fahrenheit"},
-			item{title: "Warm light", desc: "Like around 2700 Kelvin"},
-			item{title: "The vernal equinox", desc: "The autumnal equinox is pretty good too"},
-			item{title: "Gaffer’s tape", desc: "Basically sticky fabric"},
-			item{title: "Terrycloth", desc: "In other words, towel fabric"},
-		},
+		[]list.Item{},
 		list.NewDefaultDelegate(),
 		200,
-		10,
+		9,
 	)
 
+	// Remove List Title for seperate rendering of list title
 	newlist.Title = ""
-
 	nopaddingNewLine := lipgloss.NewStyle().Padding(0, 0, 1, 0)
 	newlist.Styles.Title = noStyle
 	newlist.Styles.TitleBar = noStyle
 	newlist.Styles.StatusBar = nopaddingNewLine
 	newlist.Styles.PaginationStyle = nopaddingNewLine
 	newlist.Styles.HelpStyle = nopaddingNewLine
+
+	// Remap clear filter keymap to ctrl+r
+	newlist.KeyMap.ClearFilter.SetKeys("ctrl+r")
+	newlist.KeyMap.ClearFilter.SetHelp("ctrl+r", "clear filter")
+
+	// remove the quit keymap to prevent the user from unintentionally quitting
+	// the programm and creating a project
+	newlist.KeyMap.Quit.Unbind()
+
 	return &listModel{
 		listTitle: "MyList",
 		inner:     &newlist,
@@ -91,11 +87,21 @@ func (lm *listModel) FocusOnStart() Field {
 	return lm
 }
 
-func (lm *listModel) Value(*string) Field {
+func (lm *listModel) Value(outer *string) Field {
+	lm.outerValue = outer
 	return lm
 }
 
 func (lm *listModel) Placeholder(s string) Field {
+	return lm
+}
+
+func (lm *listModel) SetItems(items ...list.Item) ListField {
+	lm.inner.SetItems(items)
+	return lm
+}
+
+func (lm *listModel) Validate(func(string) error) Field {
 	return lm
 }
 
@@ -160,6 +166,7 @@ func (lm *listModel) update(msg tea.Msg) tea.Cmd {
 	}
 	updated, cmd := lm.inner.Update(msg)
 	lm.inner = &updated
+	*lm.outerValue = lm.value()
 	return cmd
 }
 

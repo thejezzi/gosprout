@@ -12,20 +12,25 @@ var (
 	ErrUiMode                 = errors.New("no flags were provided")
 )
 
+const _defaultTemplate = "simple"
+
 type Arguments struct {
 	name     string
 	path     string
 	template string
 }
 
-func NewArguments(moduleName, projectPath string) *Arguments {
+func NewArguments(moduleName, projectPath, template string) *Arguments {
 	if len(projectPath) == 0 {
 		projectPath = moduleName
+	}
+	if len(template) == 0 {
+		template = _defaultTemplate
 	}
 	return &Arguments{
 		name:     moduleName,
 		path:     projectPath,
-		template: "simple",
+		template: template,
 	}
 }
 
@@ -44,15 +49,14 @@ func Flags() (*Arguments, error) {
 		"the path to put all the files",
 	)
 
-	// TODO: add templating when everything else is finished
-	// template := flag.String(
-	// 	"template",
-	// 	"simple",
-	// 	"specify a template to avoid some boilerplate setup",
-	// )
+	template := flag.String(
+		"template",
+		"simple",
+		"specify a template to avoid some boilerplate setup",
+	)
 	flag.Parse()
 
-	return NewArguments(*name, *path).validate()
+	return NewArguments(*name, *path, *template).validate()
 }
 
 // validate make sure that all arguments are set to create the project

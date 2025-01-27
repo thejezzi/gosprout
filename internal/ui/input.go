@@ -101,6 +101,11 @@ func (im *inputModel) Placeholder(p string) Field {
 	return im
 }
 
+func (im *inputModel) Validate(f func(string) error) Field {
+	im.inner.Validate = f
+	return im
+}
+
 func (im *inputModel) rotatePrompt() {
 	if len(im.promptList) == 0 {
 		return

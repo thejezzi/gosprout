@@ -9,6 +9,7 @@ type Field interface {
 	FocusOnStart() Field
 	Value(*string) Field
 	Placeholder(s string) Field
+	Validate(func(string) error) Field
 
 	getTitle() string
 	focus() tea.Cmd

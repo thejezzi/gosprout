@@ -56,18 +56,13 @@ func (m *model) setAllCursorsBlink() {
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); !ok {
+	if _, ok := msg.(tea.KeyMsg); !ok {
 		return m.handleButKeyMsg(msg)
 	}
 
-	keyMsg, ok := msg.(tea.KeyMsg)
-	if !ok {
-		cmd := m.updateFields(msg)
-		return m, cmd
-	}
-
+	keyMsg := msg.(tea.KeyMsg)
 	switch keyMsg.String() {
-	case "ctrl+c", "esc":
+	case "ctrl+c":
 		m.aborted = true
 		return m, tea.Quit
 
@@ -101,6 +96,7 @@ func (m *model) handleButKeyMsg(msg tea.Msg) (*model, tea.Cmd) {
 				list.setWidth(msg.Width)
 			}
 		}
+	default:
 	}
 
 	return m, m.updateFields(msg)
