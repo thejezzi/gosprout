@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/thejezzi/gosprout/cmd/sprout/cli"
@@ -12,20 +13,32 @@ import (
 func New() (*cli.Arguments, error) {
 	var module, projectPath, template, gitRepo string
 
+	modulePrefixes := os.Getenv("GOSPROUT_MODULE_PREFIXES")
+	prefixes := []string{}
+	if modulePrefixes != "" {
+		for _, p := range strings.Split(modulePrefixes, ",") {
+			if !strings.HasSuffix(p, "/") {
+				p += "/"
+			}
+			prefixes = append(prefixes, p)
+		}
+	}
+
 	fieldDefs := []FieldDef{
 		{
 			Title:         "Module",
 			Description:   "The name of your Go module",
 			RotationTitle: "module prefix",
-			Placeholder:   "github.com/your-username/your-project",
-			Prompts:       []string{"github.com/thejezzi/"},
+			Placeholder:   "your-project",
+			Prompts:       prefixes,
 			Validate: func(s string) error {
 				if len(s) == 0 {
 					return errors.New("cannot be empty")
 				}
 				return nil
 			},
-			Value: &module,
+			Value:                 &module,
+			DisablePromptRotation: modulePrefixes == "",
 		},
 		{
 			Title:                 "Path",
