@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	appStyle            = lipgloss.NewStyle().PaddingLeft(2)
+	appStyle            = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(1)
 	titleStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
 	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	focusButtonStyle    = lipgloss.NewStyle().Background(lipgloss.Color("205")).Foreground(lipgloss.Color("0"))

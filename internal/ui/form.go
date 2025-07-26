@@ -6,26 +6,32 @@ import (
 )
 
 type FieldDef struct {
-	Title       string
-	Description string
-	Placeholder string
-	Prompt      string
-	Focus       bool
-	Validate    func(string) error
-	Value       *string
-	IsList      bool
-	Hide        func() bool
+	Title                 string
+	Description           string
+	RotationTitle         string
+	Placeholder           string
+	Prompts               []string
+	Focus                 bool
+	Validate              func(string) error
+	Value                 *string
+	IsList                bool
+	DisablePromptRotation bool
+	Hide                  func() bool
 }
 
 func createInputField(fd FieldDef) Field {
 	input := Input().
 		Title(fd.Title).
 		Description(fd.Description).
+		RotationDescription(fd.RotationTitle).
 		Placeholder(fd.Placeholder).
-		Prompt(fd.Prompt).
+		Prompt(fd.Prompts...).
 		Validate(fd.Validate).
 		Value(fd.Value)
 	input.SetHide(fd.Hide)
+	if fd.DisablePromptRotation {
+		input.DisablePromptRotation()
+	}
 	if fd.Focus {
 		input.FocusOnStart()
 	}

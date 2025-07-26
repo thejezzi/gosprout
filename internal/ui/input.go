@@ -15,16 +15,18 @@ func Input() Field {
 }
 
 type inputModel struct {
-	title            string
-	titleStyle       lipgloss.Style
-	description      string
-	descriptionStyle lipgloss.Style
-	inner            textinput.Model
-	prompt           string
-	promptIndex      int
-	promptList       []string
-	promptStyle      lipgloss.Style
-	focusOnStart     bool
+	title                 string
+	titleStyle            lipgloss.Style
+	description           string
+	rotationDescription   string
+	descriptionStyle      lipgloss.Style
+	inner                 textinput.Model
+	prompt                string
+	promptIndex           int
+	promptList            []string
+	promptStyle           lipgloss.Style
+	focusOnStart          bool
+	disablePromptRotation bool
 
 	value *string
 
@@ -49,6 +51,11 @@ func newInputModel() inputModel {
 	return im
 }
 
+func (im *inputModel) DisablePromptRotation() Field {
+	im.disablePromptRotation = true
+	return im
+}
+
 func (im *inputModel) Title(s string) Field {
 	im.title = s
 	return im
@@ -60,6 +67,11 @@ func (im *inputModel) getTitle() string {
 
 func (im *inputModel) Description(desc string) Field {
 	im.description = desc
+	return im
+}
+
+func (im *inputModel) RotationDescription(desc string) Field {
+	im.rotationDescription = desc
 	return im
 }
 

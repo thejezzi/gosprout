@@ -7,11 +7,13 @@ type Field interface {
 
 	Title(string) Field
 	Description(string) Field
+	RotationDescription(string) Field
 	Prompt(...string) Field
 	FocusOnStart() Field
 	Value(*string) Field
 	Placeholder(s string) Field
 	Validate(func(string) error) Field
+	DisablePromptRotation() Field
 
 	getTitle() string
 	focus() tea.Cmd

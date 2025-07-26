@@ -71,6 +71,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !ok {
 			break
 		}
+		if input.disablePromptRotation {
+			break
+		}
 		input.rotatePrompt()
 		cmd := m.updateFields(msg)
 		return m, cmd
@@ -179,7 +182,13 @@ func (m *model) View() string {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "%s\n\n", *button)
-	b.WriteString(helpStyle.Render("ctrl+r to change module prefix"))
+	if m.focusIndex < len(m.fields) {
+		// check if any of the fields has prompt rotation enabled
+		focusedInput, ok := m.fields[m.focusIndex].(*inputModel)
+		if ok && !focusedInput.disablePromptRotation && focusedInput.rotationDescription != "" {
+			b.WriteString(helpStyle.Render("ctrl+r to change the " + focusedInput.rotationDescription))
+		}
+	}
 
 	return appStyle.Render(b.String())
 }

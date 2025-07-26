@@ -14,10 +14,11 @@ func New() (*cli.Arguments, error) {
 
 	fieldDefs := []FieldDef{
 		{
-			Title:       "Module",
-			Description: "The name of your Go module",
-			Placeholder: "github.com/your-username/your-project",
-			Prompt:      "github.com/thejezzi/",
+			Title:         "Module",
+			Description:   "The name of your Go module",
+			RotationTitle: "module prefix",
+			Placeholder:   "github.com/your-username/your-project",
+			Prompts:       []string{"github.com/thejezzi/"},
 			Validate: func(s string) error {
 				if len(s) == 0 {
 					return errors.New("cannot be empty")
@@ -27,12 +28,13 @@ func New() (*cli.Arguments, error) {
 			Value: &module,
 		},
 		{
-			Title:       "Path",
-			Description: "The directory where your project will be created",
-			Placeholder: "~/projects/my-go-app",
-			Prompt:      "~/tmp/",
-			Focus:       true,
-			Value:       &projectPath,
+			Title:                 "Path",
+			Description:           "The directory where your project will be created",
+			Placeholder:           "~/projects/my-go-app",
+			Prompts:               []string{"~/tmp/"},
+			Focus:                 true,
+			DisablePromptRotation: true,
+			Value:                 &projectPath,
 		},
 		{
 			Title:       "Template",
@@ -41,11 +43,12 @@ func New() (*cli.Arguments, error) {
 			Value:       &template,
 		},
 		{
-			Title:       "Git Repository",
-			Description: "Specify a Git repository to clone from (only for 'Git' template)",
-			Placeholder: "github.com/user/repo",
-			Prompt:      "https://",
-			Value:       &gitRepo,
+			Title:         "Git Repository",
+			Description:   "Specify a Git repository to clone from (only for 'Git' template)",
+			RotationTitle: "git prefix",
+			Placeholder:   "github.com/user/repo",
+			Prompts:       []string{"https://", "git@"},
+			Value:         &gitRepo,
 			Hide: func() bool {
 				return template != "Git"
 			},

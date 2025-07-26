@@ -65,12 +65,20 @@ func newListModel() *listModel {
 	}
 }
 
+func (lm *listModel) DisablePromptRotation() Field {
+	return lm
+}
+
 func (lm *listModel) Title(s string) Field {
 	lm.listTitle = s
 	return lm
 }
 
 func (lm *listModel) Description(string) Field {
+	return lm
+}
+
+func (lm *listModel) RotationDescription(string) Field {
 	return lm
 }
 
