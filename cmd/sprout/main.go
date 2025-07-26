@@ -1,52 +1,14 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/thejezzi/gosprout/cmd/sprout/cli"
-	"github.com/thejezzi/gosprout/internal/structure"
+	"github.com/thejezzi/gosprout/internal/templates"
 	"github.com/thejezzi/gosprout/internal/ui"
+	"github.com/thejezzi/gosprout/internal/util"
 )
-
-func runUI() (*cli.Arguments, error) {
-	var module, projectPath, template string
-
-	list := ui.List().SetItems(
-		ui.ListItem("Simple", "A simple structure with a cmd folder"),
-		ui.ListItem("Test", "A cmd folder with a main_test.go file"),
-	)
-
-	err := ui.Form(
-		ui.Input().
-			Title("module").
-			Placeholder("you-awesome-module").
-			Prompt("github.com/thejezzi/").
-			Validate(func(s string) error {
-				if len(s) == 0 {
-					return errors.New("cannot be empty")
-				}
-				return nil
-			}).
-			Value(&module),
-		ui.Input().
-			Title("path").
-			Placeholder("somewhere/to/put/project").
-			Prompt("~/tmp/").
-			FocusOnStart().
-			Value(&projectPath),
-		list.Title("template").
-			Value(&template),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(template)
-	return cli.NewArguments(module, projectPath, template), nil
-}
 
 func run() error {
 	var args *cli.Arguments
@@ -55,7 +17,7 @@ func run() error {
 	if len(os.Args) > 1 {
 		args, err = cli.Flags()
 	} else {
-		args, err = runUI()
+		args, err = ui.New()
 	}
 
 	if err != nil {
@@ -63,24 +25,21 @@ func run() error {
 	}
 
 	fmt.Println("creating project", args)
-	if err := structure.CreateNewModule(args); err != nil {
-		return err
-	}
-	return nil
-}
-
-func initLogger() *os.File {
-	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+	for _, t := range templates.All {
+		if t.Name == args.Template() {
+			return t.Create(args)
+		}
 	}
 
-	log.SetOutput(f)
-	return f
+	return fmt.Errorf("template not found: %s", args.Template())
 }
 
 func main() {
-	f := initLogger()
+	f, err := util.InitLogger()
+	if err != nil {
+		fmt.Printf("could not initialize logger: %v\n", err)
+		os.Exit(1)
+	}
 	defer f.Close()
 
 	if err := run(); err != nil {

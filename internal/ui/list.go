@@ -14,20 +14,14 @@ type ListField interface {
 	SetItems(...list.Item) ListField
 }
 
-type item struct {
-	title, desc string
+type item interface {
+	Title() string
+	Description() string
+	FilterValue() string
 }
-
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
 
 func List() ListField {
 	return newListModel()
-}
-
-func ListItem(title, desc string) list.Item {
-	return item{title, desc}
 }
 
 type listModel struct {
@@ -183,5 +177,5 @@ func (lm *listModel) value() string {
 	if !ok {
 		return ""
 	}
-	return current.title
+	return current.Title()
 }

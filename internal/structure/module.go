@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	_gomodFileName  = "go.mod"
-	_mainGoFileName = "main.go"
-	_mainGoContent  = `package main
+	_gomodFileName    = "go.mod"
+	_mainGoFileName   = "main.go"
+	_mainTestFileName = "main_test.go"
+	_mainGoContent    = `package main
 
 import "fmt"
 
@@ -22,12 +23,20 @@ func main() {
 	fmt.Println("Hello, World!")
 }
 `
+	_mainTestGoContent = `package main
+
+import "testing"
+
+func TestMain(t *testing.T) {
+	t.Log("Hello, World!")
+}
+`
 )
 
 type template = string
 
 const (
-	_templateSimple template = "simple"
+	_templateSimple = "simple"
 )
 
 type gomodData []byte
@@ -69,32 +78,6 @@ func (gmd gomodData) WriteToFile(path string) error {
 	return nil
 }
 
-// type Options struct {
-// 	path     string
-// 	name     string
-// 	template string
-// }
-//
-// func NewOptions(moduleName, modulePath string, temp template) *Options {
-// 	return &Options{
-// 		path:     modulePath,
-// 		name:     moduleName,
-// 		template: temp,
-// 	}
-// }
-//
-// func (opts Options) Name() string {
-// 	return opts.name
-// }
-//
-// func (opts Options) Path() string {
-// 	return opts.path
-// }
-//
-// func (opts Options) Template() string {
-// 	return opts.template
-// }
-
 type options interface {
 	Name() string
 	Path() string
@@ -102,10 +85,23 @@ type options interface {
 }
 
 func CreateNewModule(opts options) error {
-	switch opts.Template() {
-	case _templateSimple:
-		return simple(opts)
+	if err := simple(opts); err != nil {
+		return err
 	}
+	return nil
+}
+
+func CreateNewModuleWithTest(opts options) error {
+	if err := simple(opts); err != nil {
+		return err
+	}
+
+	basename := path.Base(opts.Name())
+	cmdPath := filepath.Join(opts.Path(), "cmd", basename)
+	if err := newMainTestGo(cmdPath); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -144,6 +140,26 @@ func goVersion() string {
 		version = version[2:] // Strip "go" prefix
 	}
 	return version
+}
+
+func newMainTestGo(path string) error {
+	cleanedPath := filepath.Clean(path)
+	splitted := strings.Split(cleanedPath, "/")
+	if splitted[len(splitted)-1] != _mainTestFileName {
+		splitted = append(splitted, _mainTestFileName)
+	}
+	mainTestGoPath := strings.Join(splitted, "/")
+
+	dirPath := filepath.Dir(mainTestGoPath)
+	if err := ensureDir(dirPath); err != nil {
+		return fmt.Errorf("could not create main_test.go file: %v", err)
+	}
+
+	if err := os.WriteFile(mainTestGoPath, []byte(_mainTestGoContent), 0o644); err != nil {
+		return fmt.Errorf("failed to write main_test.go file: %w", err)
+	}
+
+	return nil
 }
 
 func newMainGo(path string) error {
