@@ -10,7 +10,7 @@ import (
 )
 
 func New() (*cli.Arguments, error) {
-	var module, projectPath, template string
+	var module, projectPath, template, gitRepo string
 
 	fieldDefs := []FieldDef{
 		{
@@ -37,6 +37,12 @@ func New() (*cli.Arguments, error) {
 			IsList: true,
 			Value:  &template,
 		},
+		{
+			Title:       "git-repo",
+			Placeholder: "github.com/thejezzi/gosprout",
+			Prompt:      "https://",
+			Value:       &gitRepo,
+		},
 	}
 
 	err := CreateForm(fieldDefs)
@@ -44,7 +50,7 @@ func New() (*cli.Arguments, error) {
 		return nil, err
 	}
 
-	return cli.NewArguments(module, projectPath, template), nil
+	return cli.NewArguments(module, projectPath, template, gitRepo), nil
 }
 
 func Form(fields ...Field) error {

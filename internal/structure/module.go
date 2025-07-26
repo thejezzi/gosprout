@@ -162,6 +162,34 @@ func newMainTestGo(path string) error {
 	return nil
 }
 
+func ReplaceModuleName(path, newName string) error {
+	goModPath := filepath.Join(path, _gomodFileName)
+	goModBytes, err := os.ReadFile(goModPath)
+	if err != nil {
+		return fmt.Errorf("could not read go.mod file: %w", err)
+	}
+
+	modFile, err := modfile.Parse(goModPath, goModBytes, nil)
+	if err != nil {
+		return fmt.Errorf("could not parse go.mod file: %w", err)
+	}
+
+	if err := modFile.AddModuleStmt(newName); err != nil {
+		return fmt.Errorf("could not add module statement: %v", err)
+	}
+
+	modData, err := modFile.Format()
+	if err != nil {
+		return fmt.Errorf("failed to format modfile: %w", err)
+	}
+
+	if err := os.WriteFile(goModPath, modData, 0o644); err != nil {
+		return fmt.Errorf("failed to write go.mod file: %w", err)
+	}
+
+	return nil
+}
+
 func newMainGo(path string) error {
 	cleanedPath := filepath.Clean(path)
 	splitted := strings.Split(cleanedPath, "/")

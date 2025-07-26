@@ -148,6 +148,19 @@ func (m *model) updateFields(msg tea.Msg) tea.Cmd {
 func (m *model) View() string {
 	var b strings.Builder
 	for _, input := range m.fields {
+		if input.getTitle() == "git-repo" {
+			var templateValue string
+			for _, field := range m.fields {
+				if field.getTitle() == "template" {
+					if list, ok := field.(*listModel); ok {
+						templateValue = list.value()
+					}
+				}
+			}
+			if templateValue != "Git" {
+				continue
+			}
+		}
 		b.WriteString(input.render())
 	}
 

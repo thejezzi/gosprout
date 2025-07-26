@@ -18,9 +18,10 @@ type Arguments struct {
 	name     string
 	path     string
 	template string
+	GitRepo  string
 }
 
-func NewArguments(moduleName, projectPath, template string) *Arguments {
+func NewArguments(moduleName, projectPath, template, gitRepo string) *Arguments {
 	if len(projectPath) == 0 {
 		projectPath = moduleName
 	}
@@ -31,6 +32,7 @@ func NewArguments(moduleName, projectPath, template string) *Arguments {
 		name:     moduleName,
 		path:     projectPath,
 		template: template,
+		GitRepo:  gitRepo,
 	}
 }
 
@@ -54,9 +56,15 @@ func Flags() (*Arguments, error) {
 		"simple",
 		"specify a template to avoid some boilerplate setup",
 	)
+
+	gitRepo := flag.String(
+		"git",
+		"",
+		"specify a git repository to clone from",
+	)
 	flag.Parse()
 
-	return NewArguments(*name, *path, *template).validate()
+	return NewArguments(*name, *path, *template, *gitRepo).validate()
 }
 
 // validate make sure that all arguments are set to create the project
