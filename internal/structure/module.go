@@ -33,13 +33,11 @@ func TestMain(t *testing.T) {
 `
 )
 
-type template = string
-
 const (
 	_templateSimple = "simple"
 )
 
-type gomodData []byte
+type gomodData []byte // go.mod file contents
 
 func newGoMod(moduleName string) (gomodData, error) {
 	modFile := &modfile.File{}
@@ -78,20 +76,21 @@ func (gmd gomodData) WriteToFile(path string) error {
 	return nil
 }
 
-type options interface {
+// Options provides the required project creation arguments.
+type Options interface {
 	Name() string
 	Path() string
 	Template() string
 }
 
-func CreateNewModule(opts options) error {
+func CreateNewModule(opts Options) error {
 	if err := simple(opts); err != nil {
 		return err
 	}
 	return nil
 }
 
-func CreateNewModuleWithTest(opts options) error {
+func CreateNewModuleWithTest(opts Options) error {
 	if err := simple(opts); err != nil {
 		return err
 	}
@@ -105,7 +104,8 @@ func CreateNewModuleWithTest(opts options) error {
 	return nil
 }
 
-func simple(opts options) error {
+// simple creates a new Go module with a main.go file in cmd/<modulename>.
+func simple(opts Options) error {
 	if err := ensureDir(opts.Path()); err != nil {
 		return err
 	}
@@ -127,6 +127,7 @@ func simple(opts options) error {
 	return nil
 }
 
+// ensureDir creates the directory if it does not exist.
 func ensureDir(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return os.MkdirAll(path, 0o755)
@@ -134,6 +135,7 @@ func ensureDir(path string) error {
 	return nil
 }
 
+// goVersion returns the current Go version string (e.g., 1.21.0).
 func goVersion() string {
 	version := runtime.Version()
 	if len(version) > 2 && version[:2] == "go" {
@@ -142,6 +144,7 @@ func goVersion() string {
 	return version
 }
 
+// newMainTestGo creates a main_test.go file in the specified path.
 func newMainTestGo(path string) error {
 	cleanedPath := filepath.Clean(path)
 	splitted := strings.Split(cleanedPath, "/")
@@ -162,6 +165,7 @@ func newMainTestGo(path string) error {
 	return nil
 }
 
+// ReplaceModuleName updates the module name in go.mod at the given path.
 func ReplaceModuleName(path, newName string) error {
 	goModPath := filepath.Join(path, _gomodFileName)
 	goModBytes, err := os.ReadFile(goModPath)
@@ -190,6 +194,7 @@ func ReplaceModuleName(path, newName string) error {
 	return nil
 }
 
+// newMainGo creates a main.go file in the specified path.
 func newMainGo(path string) error {
 	cleanedPath := filepath.Clean(path)
 	splitted := strings.Split(cleanedPath, "/")

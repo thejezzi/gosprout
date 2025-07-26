@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/thejezzi/gosprout/cmd/sprout/cli"
-	"github.com/thejezzi/gosprout/internal/templates"
+	"github.com/thejezzi/gosprout/internal/template"
 	"github.com/thejezzi/gosprout/internal/ui"
 	"github.com/thejezzi/gosprout/internal/util"
 )
@@ -25,7 +25,7 @@ func run() error {
 	}
 
 	fmt.Println("creating project", args)
-	for _, t := range templates.All {
+	for _, t := range template.All {
 		if t.Name == args.Template() {
 			return t.Create(args)
 		}

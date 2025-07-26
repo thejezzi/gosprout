@@ -2,7 +2,7 @@ package ui
 
 import (
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/thejezzi/gosprout/internal/templates"
+	"github.com/thejezzi/gosprout/internal/template"
 )
 
 type FieldDef struct {
@@ -29,8 +29,8 @@ func createInputField(fd FieldDef) Field {
 }
 
 func createListField(fd FieldDef) Field {
-	items := make([]list.Item, len(templates.All))
-	for i, t := range templates.All {
+	items := make([]list.Item, len(template.All))
+	for i, t := range template.All {
 		items[i] = t
 	}
 	list := List().SetItems(items...)
