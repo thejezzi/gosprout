@@ -29,6 +29,7 @@ type inputModel struct {
 	value *string
 
 	validation func(string) error
+	hide       func() bool
 }
 
 func newInputModel() inputModel {
@@ -161,6 +162,17 @@ func (im *inputModel) render() string {
 	b.WriteRune('\n')
 
 	return b.String()
+}
+
+func (im *inputModel) SetHide(hide func() bool) {
+	im.hide = hide
+}
+
+func (im *inputModel) IsHidden() bool {
+	if im.hide == nil {
+		return false
+	}
+	return im.hide()
 }
 
 func (im *inputModel) isFocused() bool {

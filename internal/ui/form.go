@@ -13,6 +13,7 @@ type FieldDef struct {
 	Validate    func(string) error
 	Value       *string
 	IsList      bool
+	Hide        func() bool
 }
 
 func createInputField(fd FieldDef) Field {
@@ -22,6 +23,7 @@ func createInputField(fd FieldDef) Field {
 		Prompt(fd.Prompt).
 		Validate(fd.Validate).
 		Value(fd.Value)
+	input.SetHide(fd.Hide)
 	if fd.Focus {
 		input.FocusOnStart()
 	}

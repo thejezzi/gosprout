@@ -31,6 +31,7 @@ type listModel struct {
 
 	inner      *list.Model
 	outerValue *string
+	hide       func() bool
 }
 
 func newListModel() *listModel {
@@ -170,6 +171,17 @@ func (lm *listModel) setWidth(width int) {
 
 func (lm *listModel) isFocused() bool {
 	return lm.focused
+}
+
+func (lm *listModel) SetHide(hide func() bool) {
+	lm.hide = hide
+}
+
+func (lm *listModel) IsHidden() bool {
+	if lm.hide == nil {
+		return false
+	}
+	return lm.hide()
 }
 
 func (lm *listModel) value() string {

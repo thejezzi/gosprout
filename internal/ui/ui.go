@@ -42,6 +42,9 @@ func New() (*cli.Arguments, error) {
 			Placeholder: "github.com/thejezzi/gosprout",
 			Prompt:      "https://",
 			Value:       &gitRepo,
+			Hide: func() bool {
+				return template != "Git"
+			},
 		},
 	}
 

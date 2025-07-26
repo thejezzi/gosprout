@@ -3,6 +3,8 @@ package ui
 import tea "github.com/charmbracelet/bubbletea"
 
 type Field interface {
+	Hidable
+
 	Title(string) Field
 	Description(string) Field
 	Prompt(...string) Field

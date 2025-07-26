@@ -121,20 +121,9 @@ func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 			if m.focusIndex == len(m.fields) {
 				break
 			}
-			// Skip git-repo field if hidden
-			field := m.fields[m.focusIndex]
-			if field.getTitle() == "git-repo" {
-				var templateValue string
-				for _, f := range m.fields {
-					if f.getTitle() == "template" {
-						if list, ok := f.(*listModel); ok {
-							templateValue = list.value()
-						}
-					}
-				}
-				if templateValue != "Git" {
-					continue // skip this field
-				}
+			// Skip hidden fields
+			if m.fields[m.focusIndex].IsHidden() {
+				continue
 			}
 			break
 		}
@@ -176,21 +165,11 @@ func (m *model) updateFields(msg tea.Msg) tea.Cmd {
 
 func (m *model) View() string {
 	var b strings.Builder
-	for _, input := range m.fields {
-		if input.getTitle() == "git-repo" {
-			var templateValue string
-			for _, field := range m.fields {
-				if field.getTitle() == "template" {
-					if list, ok := field.(*listModel); ok {
-						templateValue = list.value()
-					}
-				}
-			}
-			if templateValue != "Git" {
-				continue
-			}
+	for _, field := range m.fields {
+		if field.IsHidden() {
+			continue
 		}
-		b.WriteString(input.render())
+		b.WriteString(field.render())
 	}
 
 	button := &blurredButton
