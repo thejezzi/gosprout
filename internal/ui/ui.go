@@ -14,8 +14,9 @@ func New() (*cli.Arguments, error) {
 
 	fieldDefs := []FieldDef{
 		{
-			Title:       "module",
-			Placeholder: "you-awesome-module",
+			Title:       "Module",
+			Description: "The name of your Go module",
+			Placeholder: "github.com/your-username/your-project",
 			Prompt:      "github.com/thejezzi/",
 			Validate: func(s string) error {
 				if len(s) == 0 {
@@ -26,20 +27,23 @@ func New() (*cli.Arguments, error) {
 			Value: &module,
 		},
 		{
-			Title:       "path",
-			Placeholder: "somewhere/to/put/project",
+			Title:       "Path",
+			Description: "The directory where your project will be created",
+			Placeholder: "~/projects/my-go-app",
 			Prompt:      "~/tmp/",
 			Focus:       true,
 			Value:       &projectPath,
 		},
 		{
-			Title:  "template",
-			IsList: true,
-			Value:  &template,
+			Title:       "Template",
+			Description: "Choose a template to quickly set up your project structure",
+			IsList:      true,
+			Value:       &template,
 		},
 		{
-			Title:       "git-repo",
-			Placeholder: "github.com/thejezzi/gosprout",
+			Title:       "Git Repository",
+			Description: "Specify a Git repository to clone from (only for 'Git' template)",
+			Placeholder: "github.com/user/repo",
 			Prompt:      "https://",
 			Value:       &gitRepo,
 			Hide: func() bool {

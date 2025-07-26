@@ -117,7 +117,7 @@ func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 					m.focusIndex = len(m.fields)
 				}
 			}
-			// If we're at the submit button, stop
+			// If we\'re at the submit button, stop
 			if m.focusIndex == len(m.fields) {
 				break
 			}
@@ -165,6 +165,8 @@ func (m *model) updateFields(msg tea.Msg) tea.Cmd {
 
 func (m *model) View() string {
 	var b strings.Builder
+	b.WriteString(titleStyle.Render("GoSprout Project Creator") + "\n\n")
+
 	for _, field := range m.fields {
 		if field.IsHidden() {
 			continue
@@ -179,5 +181,5 @@ func (m *model) View() string {
 	fmt.Fprintf(&b, "%s\n\n", *button)
 	b.WriteString(helpStyle.Render("ctrl+r to change module prefix"))
 
-	return b.String()
+	return appStyle.Render(b.String())
 }

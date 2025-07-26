@@ -7,6 +7,7 @@ import (
 
 type FieldDef struct {
 	Title       string
+	Description string
 	Placeholder string
 	Prompt      string
 	Focus       bool
@@ -19,6 +20,7 @@ type FieldDef struct {
 func createInputField(fd FieldDef) Field {
 	input := Input().
 		Title(fd.Title).
+		Description(fd.Description).
 		Placeholder(fd.Placeholder).
 		Prompt(fd.Prompt).
 		Validate(fd.Validate).
