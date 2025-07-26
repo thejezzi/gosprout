@@ -104,18 +104,47 @@ func (m *model) handleButKeyMsg(msg tea.Msg) (*model, tea.Cmd) {
 
 func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 	s := msg.String()
-
-	if s == "up" || s == "shift+tab" {
-		m.focusIndex--
-	} else {
-		m.setAllCursorsBlink()
-		m.focusIndex++
+	move := func(forward bool) {
+		for {
+			if forward {
+				m.focusIndex++
+				if m.focusIndex > len(m.fields) {
+					m.focusIndex = 0
+				}
+			} else {
+				m.focusIndex--
+				if m.focusIndex < 0 {
+					m.focusIndex = len(m.fields)
+				}
+			}
+			// If we're at the submit button, stop
+			if m.focusIndex == len(m.fields) {
+				break
+			}
+			// Skip git-repo field if hidden
+			field := m.fields[m.focusIndex]
+			if field.getTitle() == "git-repo" {
+				var templateValue string
+				for _, f := range m.fields {
+					if f.getTitle() == "template" {
+						if list, ok := f.(*listModel); ok {
+							templateValue = list.value()
+						}
+					}
+				}
+				if templateValue != "Git" {
+					continue // skip this field
+				}
+			}
+			break
+		}
 	}
 
-	if m.focusIndex > len(m.fields) {
-		m.focusIndex = 0
-	} else if m.focusIndex < 0 {
-		m.focusIndex = len(m.fields)
+	if s == "up" || s == "shift+tab" {
+		move(false)
+	} else {
+		m.setAllCursorsBlink()
+		move(true)
 	}
 
 	return m, tea.Batch(m.evaluateFocusStyles()...)
