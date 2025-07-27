@@ -89,7 +89,9 @@ func (cm *checkboxModel) update(msg tea.Msg) tea.Cmd {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case " ", "enter":
-			*cm.value = !*cm.value
+			if cm.value != nil {
+				*cm.value = !*cm.value
+			}
 		}
 	}
 	return nil
@@ -102,21 +104,28 @@ func (cm *checkboxModel) isFocused() bool {
 func (cm *checkboxModel) render() string {
 	var s strings.Builder
 
-	checkboxView := "☐ "
-	if *cm.value {
-		checkboxView = "✓ "
+	// Checkmark
+	check := "☐"
+	if cm.value != nil && *cm.value {
+		check = checkmarkChecked.Render("✓")
 	}
 
-	checkboxView += cm.description
+	desc := cm.description
 
 	if cm.focused {
-		s.WriteString(focusedStyle.Render(checkboxView))
+		// Focused: checkmark stays green if checked, description is pink
+		if cm.value != nil && *cm.value {
+			s.WriteString(check)
+			s.WriteString(focusedStyle.Render(" " + desc))
+		} else {
+			s.WriteString(focusedStyle.Render(check + " " + desc))
+		}
 	} else {
-		s.WriteString(checkboxView)
+		// Not focused: checkmark green if checked, rest normal
+		s.WriteString(check + " " + desc)
 	}
 
 	s.WriteString("\n\n")
-
 	return s.String()
 }
 

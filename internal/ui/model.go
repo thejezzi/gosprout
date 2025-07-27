@@ -67,6 +67,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "ctrl+r":
+		if m.focusIndex == len(m.fields) {
+			// Focus is on submit, ignore rotation
+			break
+		}
 		input, ok := m.fields[m.focusIndex].(*inputModel)
 		if !ok {
 			break
@@ -169,9 +173,27 @@ func (m *model) updateFields(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
+const mainTitle = `
+╔═════════════════════════════════════╗
+║███╗   ███╗██╗  ██╗ ██████╗  ██████╗ ║
+║████╗ ████║██║ ██╔╝██╔════╝ ██╔═══██╗║
+║██╔████╔██║█████╔╝ ██║  ███╗██║   ██║║
+║██║╚██╔╝██║██╔═██╗ ██║   ██║██║   ██║║
+║██║ ╚═╝ ██║██║  ██╗╚██████╔╝╚██████╔╝║
+║╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ║
+╚═════════════════════════════════════╝
+`
+
+const mainTitle2 = `
+▗▖  ▗▖▗▖ ▗▖ ▗▄▄▖ ▄▄▄  
+▐▛▚▞▜▌▐▌▗▞▘▐▌   █   █ 
+▐▌  ▐▌▐▛▚▖ ▐▌▝▜▌▀▄▄▄▀ 
+▐▌  ▐▌▐▌ ▐▌▝▚▄▞▘      
+`
+
 func (m *model) View() string {
 	var b strings.Builder
-	b.WriteString(titleStyle.Render("GoSprout Project Creator") + "\n\n")
+	b.WriteString(titleStyle.Render(strings.Trim(mainTitle2, "\n")) + "\n\n")
 
 	for _, field := range m.fields {
 		if field.IsHidden() {

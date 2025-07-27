@@ -22,4 +22,7 @@ var (
 
 	focusedButton = focusButtonStyle.Render("  Submit  ")
 	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+
+	checkmarkChecked   = lipgloss.NewStyle().Foreground(lipgloss.Color("#00ff00"))
+	checkmarkUnchecked = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
 )
