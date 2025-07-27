@@ -24,6 +24,7 @@ type model struct {
 	fields     []Field
 	cursorMode cursor.Mode
 	aborted    bool
+	lineCount  int // dynamically updated line count
 }
 
 func newModel(fields ...Field) (*model, error) {
@@ -39,6 +40,18 @@ func newModel(fields ...Field) (*model, error) {
 	}
 
 	return &m, nil
+}
+
+func (m *model) Cleanup() {
+	lines := m.LineCount()
+	if lines > 0 {
+		for range lines {
+			// Move cursor up and clear line
+			fmt.Print("\033[2K\033[A")
+		}
+		// Clear the final line (where the cursor ends up)
+		fmt.Print("\033[2K\r")
+	}
 }
 
 func (m *model) Init() tea.Cmd {
@@ -215,5 +228,17 @@ func (m *model) View() string {
 		}
 	}
 
-	return appStyle.Render(b.String())
+	rendered := appStyle.Render(b.String())
+	// Count lines: split on '\n', count non-empty lines
+	lines := strings.Count(rendered, "\n")
+	if !strings.HasSuffix(rendered, "\n") && len(rendered) > 0 {
+		lines++
+	}
+	m.lineCount = lines
+	return rendered
+}
+
+// LineCount returns the number of lines currently rendered by the UI.
+func (m *model) LineCount() int {
+	return m.lineCount
 }
