@@ -82,7 +82,11 @@ func (im *inputModel) FocusOnStart() Field {
 }
 
 func (im *inputModel) Prompt(prompts ...string) Field {
+	im.promptList = make([]string, 0)
 	im.promptList = append(im.promptList, prompts...)
+	if len(prompts) > 0 {
+		im.prompt = im.promptList[0]
+	}
 	return im
 }
 

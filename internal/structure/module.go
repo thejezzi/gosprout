@@ -33,10 +33,15 @@ func TestMain(t *testing.T) {
 
 // dynamicMakefileContent returns a Makefile string for the given main.go relative path.
 func dynamicMakefileContent(mainGoRelPath string) string {
-	return ".PHONY: build\n" +
-		"build:\n\tgo build " + mainGoRelPath + "\n\n" +
-		".PHONY: test\n" +
-		"test:\n\tgo test ./...\n"
+	return strings.Join(
+		[]string{
+			".PHONY: build test",
+			"build:\n\tgo build " + mainGoRelPath,
+			"test:\n\tgo test ./...",
+			"run:\n\tgo run " + mainGoRelPath,
+		},
+		"\n\n",
+	)
 }
 
 const (

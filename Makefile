@@ -2,4 +2,4 @@
 all: run
 
 run:
-	@go run cmd/sprout/main.go
+	@go run cmd/mkgo/main.go
