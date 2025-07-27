@@ -12,6 +12,7 @@ import (
 
 func New() (*cli.Arguments, error) {
 	var module, projectPath, template, gitRepo string
+	var createMakefile bool
 
 	modulePrefixes := os.Getenv("GOSPROUT_MODULE_PREFIXES")
 	prefixes := []string{}
@@ -26,6 +27,7 @@ func New() (*cli.Arguments, error) {
 
 	fieldDefs := []FieldDef{
 		{
+			Type:          InputType,
 			Title:         "Module",
 			Description:   "The name of your Go module",
 			RotationTitle: "module prefix",
@@ -41,6 +43,7 @@ func New() (*cli.Arguments, error) {
 			DisablePromptRotation: modulePrefixes == "",
 		},
 		{
+			Type:                  InputType,
 			Title:                 "Path",
 			Description:           "The directory where your project will be created",
 			Placeholder:           "~/projects/my-go-app",
@@ -50,12 +53,13 @@ func New() (*cli.Arguments, error) {
 			Value:                 &projectPath,
 		},
 		{
+			Type:        ListType,
 			Title:       "Template",
 			Description: "Choose a template to quickly set up your project structure",
-			IsList:      true,
 			Value:       &template,
 		},
 		{
+			Type:          InputType,
 			Title:         "Git Repository",
 			Description:   "Specify a Git repository to clone from (only for 'Git' template)",
 			RotationTitle: "git prefix",
@@ -66,6 +70,20 @@ func New() (*cli.Arguments, error) {
 				return template != "Git"
 			},
 		},
+		{
+			Type:  GroupType,
+			Title: "Additional options",
+			Fields: []FieldDef{
+				{
+					Type:          CheckboxType,
+					Description:   "Create a Makefile",
+					CheckboxValue: &createMakefile,
+				},
+			},
+			Hide: func() bool {
+				return template == "Git"
+			},
+		},
 	}
 
 	err := CreateForm(fieldDefs)
@@ -73,7 +91,13 @@ func New() (*cli.Arguments, error) {
 		return nil, err
 	}
 
-	return cli.NewArguments(module, projectPath, template, gitRepo), nil
+	return cli.NewArguments(
+		module,
+		projectPath,
+		template,
+		gitRepo,
+		createMakefile,
+	), nil
 }
 
 func Form(fields ...Field) error {

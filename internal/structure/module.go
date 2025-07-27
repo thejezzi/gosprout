@@ -31,6 +31,15 @@ func TestMain(t *testing.T) {
 	t.Log("Hello, World!")
 }
 `
+	_makefileContent = `
+.PHONY: build
+build:
+	go build -o bin/app cmd/app/main.go
+
+.PHONY: test
+test:
+	go test ./...
+`
 )
 
 const (
@@ -81,11 +90,17 @@ type Options interface {
 	Name() string
 	Path() string
 	Template() string
+	CreateMakefile() bool
 }
 
 func CreateNewModule(opts Options) error {
 	if err := simple(opts); err != nil {
 		return err
+	}
+	if opts.CreateMakefile() {
+		if err := newMakefile(opts.Path()); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -210,6 +225,26 @@ func newMainGo(path string) error {
 
 	if err := os.WriteFile(mainGoPath, []byte(_mainGoContent), 0o644); err != nil {
 		return fmt.Errorf("failed to write main.go file: %w", err)
+	}
+
+	return nil
+}
+
+func newMakefile(path string) error {
+	cleanedPath := filepath.Clean(path)
+	splitted := strings.Split(cleanedPath, "/")
+	if splitted[len(splitted)-1] != "Makefile" {
+		splitted = append(splitted, "Makefile")
+	}
+	makefile_path := strings.Join(splitted, "/")
+
+	dirPath := filepath.Dir(makefile_path)
+	if err := ensureDir(dirPath); err != nil {
+		return fmt.Errorf("could not create Makefile: %v", err)
+	}
+
+	if err := os.WriteFile(makefile_path, []byte(_makefileContent), 0o644); err != nil {
+		return fmt.Errorf("failed to write Makefile: %w", err)
 	}
 
 	return nil

@@ -15,13 +15,14 @@ var (
 const _defaultTemplate = "simple"
 
 type Arguments struct {
-	name     string
-	path     string
-	template string
-	GitRepo  string
+	name           string
+	path           string
+	template       string
+	GitRepo        string
+	createMakefile bool
 }
 
-func NewArguments(moduleName, projectPath, template, gitRepo string) *Arguments {
+func NewArguments(moduleName, projectPath, template, gitRepo string, createMakefile bool) *Arguments {
 	if len(projectPath) == 0 {
 		projectPath = moduleName
 	}
@@ -29,10 +30,11 @@ func NewArguments(moduleName, projectPath, template, gitRepo string) *Arguments 
 		template = _defaultTemplate
 	}
 	return &Arguments{
-		name:     moduleName,
-		path:     projectPath,
-		template: template,
-		GitRepo:  gitRepo,
+		name:           moduleName,
+		path:           projectPath,
+		template:       template,
+		GitRepo:        gitRepo,
+		createMakefile: createMakefile,
 	}
 }
 
@@ -62,9 +64,14 @@ func Flags() (*Arguments, error) {
 		"",
 		"specify a git repository to clone from",
 	)
+	createMakefile := flag.Bool(
+		"makefile",
+		false,
+		"create a Makefile",
+	)
 	flag.Parse()
 
-	return NewArguments(*name, *path, *template, *gitRepo).validate()
+	return NewArguments(*name, *path, *template, *gitRepo, *createMakefile).validate()
 }
 
 // validate make sure that all arguments are set to create the project
@@ -92,6 +99,10 @@ func (args Arguments) Path() string {
 
 func (args Arguments) Template() string {
 	return args.template
+}
+
+func (args Arguments) CreateMakefile() bool {
+	return args.createMakefile
 }
 
 func (args Arguments) IsEmpty() bool {

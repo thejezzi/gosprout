@@ -5,7 +5,17 @@ import (
 	"github.com/thejezzi/gosprout/internal/template"
 )
 
+type FieldType int
+
+const (
+	InputType FieldType = iota
+	ListType
+	CheckboxType
+	GroupType
+)
+
 type FieldDef struct {
+	Type                  FieldType
 	Title                 string
 	Description           string
 	RotationTitle         string
@@ -14,9 +24,10 @@ type FieldDef struct {
 	Focus                 bool
 	Validate              func(string) error
 	Value                 *string
-	IsList                bool
 	DisablePromptRotation bool
 	Hide                  func() bool
+	CheckboxValue         *bool
+	Fields                []FieldDef
 }
 
 func createInputField(fd FieldDef) Field {
@@ -28,14 +39,23 @@ func createInputField(fd FieldDef) Field {
 		Prompt(fd.Prompts...).
 		Validate(fd.Validate).
 		Value(fd.Value)
-	input.SetHide(fd.Hide)
 	if fd.DisablePromptRotation {
 		input.DisablePromptRotation()
 	}
 	if fd.Focus {
 		input.FocusOnStart()
 	}
+	input.SetHide(fd.Hide)
 	return input
+}
+
+func createCheckboxField(fd FieldDef) Field {
+	checkbox := Checkbox().(*checkboxModel).
+		SetValue(fd.CheckboxValue)
+	checkbox.Title(fd.Title)
+	checkbox.Description(fd.Description)
+	checkbox.SetHide(fd.Hide)
+	return checkbox
 }
 
 func createListField(fd FieldDef) Field {
@@ -47,14 +67,40 @@ func createListField(fd FieldDef) Field {
 	return list.Title(fd.Title).Value(fd.Value)
 }
 
-func CreateForm(fieldDefs []FieldDef) error {
-	fields := make([]Field, len(fieldDefs))
-	for i, fd := range fieldDefs {
-		if fd.IsList {
-			fields[i] = createListField(fd)
-			continue
+func buildFields(fieldDefs []FieldDef) []Field {
+	var fields []Field
+	for _, fd := range fieldDefs {
+		switch fd.Type {
+		case GroupType:
+			fields = append(fields, createHeaderField(fd))
+
+			childrenDefs := make([]FieldDef, len(fd.Fields))
+			copy(childrenDefs, fd.Fields)
+			if fd.Hide != nil {
+				for i := range childrenDefs {
+					childrenDefs[i].Hide = fd.Hide
+				}
+			}
+			fields = append(fields, buildFields(childrenDefs)...)
+		case ListType:
+			fields = append(fields, createListField(fd))
+		case CheckboxType:
+			fields = append(fields, createCheckboxField(fd))
+		default: // InputType
+			fields = append(fields, createInputField(fd))
 		}
-		fields[i] = createInputField(fd)
 	}
+	return fields
+}
+
+func CreateForm(fieldDefs []FieldDef) error {
+	fields := buildFields(fieldDefs)
 	return Form(fields...)
+}
+
+func createHeaderField(fd FieldDef) Field {
+	header := Header()
+	header.Title(fd.Title)
+	header.SetHide(fd.Hide)
+	return header
 }

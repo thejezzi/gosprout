@@ -124,8 +124,11 @@ func (m *model) focusNext(msg tea.KeyMsg) (*model, tea.Cmd) {
 			if m.focusIndex == len(m.fields) {
 				break
 			}
-			// Skip hidden fields
+			// Skip hidden fields and headers
 			if m.fields[m.focusIndex].IsHidden() {
+				continue
+			}
+			if _, ok := m.fields[m.focusIndex].(*headerModel); ok {
 				continue
 			}
 			break
