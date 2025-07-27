@@ -2,9 +2,20 @@ package util
 
 import (
 	"errors"
+	"log"
 	"math/rand"
 	"os"
 )
+
+func InitLogger() (*os.File, error) {
+	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	log.SetOutput(f)
+	return f, nil
+}
 
 var (
 	errNoWordLists      = errors.New("there is no word list to choose from")

@@ -50,7 +50,7 @@ func TestCreateMainGo(t *testing.T) {
 		os.TempDir(),
 		fmt.Sprintf("gosprout_test_%s", util.RandomString(6)),
 	)
-	err := newMainGo(tmpDir)
+	err := newMainGo(filepath.Join(tmpDir, _mainGoFileName))
 	assert.NoError(t, err)
 	fileInfo, err := os.Stat(filepath.Join(tmpDir, _mainGoFileName))
 	assert.NoError(t, err)

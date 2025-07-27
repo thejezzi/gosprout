@@ -1,80 +1,92 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type InputField interface {
-	Title(string) InputField
-	Description(string) InputField
-	Prompt(...string) InputField
-	FocusOnStart() InputField
-	Value(*string) InputField
-	Placeholder(s string) InputField
-}
-
-func Input() InputField {
+func Input() Field {
 	im := newInputModel()
 	return &im
 }
 
 type inputModel struct {
-	title            string
-	titleStyle       lipgloss.Style
-	description      string
-	descriptionStyle lipgloss.Style
-	inner            textinput.Model
-	prompt           string
-	promptIndex      int
-	promptList       []string
-	promptStyle      lipgloss.Style
-	focusOnStart     bool
+	title                 string
+	titleStyle            lipgloss.Style
+	description           string
+	rotationDescription   string
+	descriptionStyle      lipgloss.Style
+	inner                 textinput.Model
+	prompt                string
+	promptIndex           int
+	promptList            []string
+	promptStyle           lipgloss.Style
+	focusOnStart          bool
+	disablePromptRotation bool
 
 	value *string
 
 	validation func(string) error
+	hide       func() bool
 }
 
 func newInputModel() inputModel {
 	im := inputModel{
-		titleStyle:       titleStyle,
-		descriptionStyle: helpStyle,
+		titleStyle:       TitleStyle,
+		descriptionStyle: HelpStyle,
 		promptStyle:      focusedStyle,
 		inner:            textinput.New(),
 		promptList:       make([]string, 0),
 	}
 
+	im.SetInnerCursorStyle(cursorStyle)
+	im.CharLimit(256)
 	im.AppendPrompts("")
 	im.inner.Prompt = ""
 	im.inner.Cursor.SetMode(cursor.CursorBlink)
 	return im
 }
 
-func (im *inputModel) Title(s string) InputField {
+func (im *inputModel) DisablePromptRotation() Field {
+	im.disablePromptRotation = true
+	return im
+}
+
+func (im *inputModel) Title(s string) Field {
 	im.title = s
 	return im
 }
 
-func (im *inputModel) Description(desc string) InputField {
+func (im *inputModel) getTitle() string {
+	return im.title
+}
+
+func (im *inputModel) Description(desc string) Field {
 	im.description = desc
 	return im
 }
 
-func (im *inputModel) FocusOnStart() InputField {
-	im.Focus()
+func (im *inputModel) RotationDescription(desc string) Field {
+	im.rotationDescription = desc
+	return im
+}
+
+func (im *inputModel) FocusOnStart() Field {
+	im.focus()
 	im.SetInnerCursorMode(cursor.CursorHide)
 	return im
 }
 
-func (im *inputModel) Prompt(prompts ...string) InputField {
+func (im *inputModel) Prompt(prompts ...string) Field {
 	im.promptList = append(im.promptList, prompts...)
 	return im
 }
 
-func (im *inputModel) Value(v *string) InputField {
+func (im *inputModel) Value(v *string) Field {
 	im.value = v
 	return im
 }
@@ -91,16 +103,23 @@ func (im *inputModel) SetInnerTextStyle(s lipgloss.Style) {
 	im.inner.TextStyle = s
 }
 
-func (im *inputModel) Focus() tea.Cmd {
+func (im *inputModel) focus() tea.Cmd {
+	im.SetInnerPromptStyle(focusedStyle)
+	im.SetInnerTextStyle(focusedStyle)
 	return im.inner.Focus()
 }
 
-func (im *inputModel) Placeholder(p string) InputField {
+func (im *inputModel) Placeholder(p string) Field {
 	im.inner.Placeholder = p
 	return im
 }
 
-func (im *inputModel) RotatePrompt() {
+func (im *inputModel) Validate(f func(string) error) Field {
+	im.inner.Validate = f
+	return im
+}
+
+func (im *inputModel) rotatePrompt() {
 	if len(im.promptList) == 0 {
 		return
 	}
@@ -121,7 +140,7 @@ func (im *inputModel) SetInnerCursorStyle(s lipgloss.Style) {
 	im.inner.Cursor.Style = s
 }
 
-func (im *inputModel) UpdateInner(msg tea.Msg) tea.Cmd {
+func (im *inputModel) update(msg tea.Msg) tea.Cmd {
 	updated, cmd := im.inner.Update(msg)
 	*im.value = im.prompt + updated.Value()
 	im.inner = updated
@@ -132,6 +151,54 @@ func (im *inputModel) SetInnerPromptStyle(s lipgloss.Style) {
 	im.inner.PromptStyle = s
 }
 
-func (im *inputModel) Blur() {
+func (im *inputModel) blur() {
+	im.SetInnerPromptStyle(noStyle)
 	im.inner.Blur()
+}
+
+func (im *inputModel) render() string {
+	b := strings.Builder{}
+	// title
+	b.WriteString(im.titleStyle.Render(im.title))
+	b.WriteRune('\n')
+	// the actual input
+	im.inner.TextStyle = noStyle
+	b.WriteString("> ")
+	b.WriteString(im.promptStyle.Render(im.prompt))
+	b.WriteString(im.inner.View())
+	b.WriteRune('\n')
+	if len(im.description) > 0 {
+		b.WriteString(im.descriptionStyle.Render(im.description))
+		b.WriteRune('\n')
+	}
+	b.WriteRune('\n')
+
+	return b.String()
+}
+
+func (im *inputModel) SetHide(hide func() bool) {
+	im.hide = hide
+}
+
+func (im *inputModel) IsHidden() bool {
+	if im.hide == nil {
+		return false
+	}
+	return im.hide()
+}
+
+// summaryEntry returns the summary title and value for this input field.
+func (im *inputModel) summaryEntry() (title, value string) {
+	if im.title == "" {
+		return "", ""
+	}
+	val := ""
+	if im.value != nil {
+		val = *im.value
+	}
+	return im.title, val
+}
+
+func (im *inputModel) isFocused() bool {
+	return im.inner.Focused()
 }
