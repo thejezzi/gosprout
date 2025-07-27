@@ -5,10 +5,10 @@ import (
 	"os"
 	"os/exec"
 
-	argsPkg "github.com/thejezzi/gosprout/internal/args"
-	"github.com/thejezzi/gosprout/internal/template"
-	"github.com/thejezzi/gosprout/internal/ui"
-	"github.com/thejezzi/gosprout/internal/util"
+	argsPkg "github.com/thejezzi/mkgo/internal/args"
+	"github.com/thejezzi/mkgo/internal/template"
+	"github.com/thejezzi/mkgo/internal/ui"
+	"github.com/thejezzi/mkgo/internal/util"
 )
 
 // newArgumentsFromUI converts a ui.UI to *argsPkg.Arguments

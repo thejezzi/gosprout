@@ -1,4 +1,4 @@
-module github.com/thejezzi/gosprout
+module github.com/thejezzi/mkgo
 
 go 1.22.0
 

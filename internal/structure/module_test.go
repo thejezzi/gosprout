@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thejezzi/gosprout/internal/util"
+	"github.com/thejezzi/mkgo/internal/util"
 )
 
 func TestCreateGoMod(t *testing.T) {

@@ -3,9 +3,9 @@ package template
 import (
 	"fmt"
 
-	"github.com/thejezzi/gosprout/internal/args"
-	"github.com/thejezzi/gosprout/internal/git"
-	"github.com/thejezzi/gosprout/internal/structure"
+	"github.com/thejezzi/mkgo/internal/args"
+	"github.com/thejezzi/mkgo/internal/git"
+	"github.com/thejezzi/mkgo/internal/structure"
 )
 
 // Template struct and methods

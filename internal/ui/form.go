@@ -2,7 +2,7 @@ package ui
 
 import (
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/thejezzi/gosprout/internal/template"
+	"github.com/thejezzi/mkgo/internal/template"
 )
 
 type FieldType int
