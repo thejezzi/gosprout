@@ -36,8 +36,8 @@ type inputModel struct {
 
 func newInputModel() inputModel {
 	im := inputModel{
-		titleStyle:       titleStyle,
-		descriptionStyle: helpStyle,
+		titleStyle:       TitleStyle,
+		descriptionStyle: HelpStyle,
 		promptStyle:      focusedStyle,
 		inner:            textinput.New(),
 		promptList:       make([]string, 0),
@@ -185,6 +185,18 @@ func (im *inputModel) IsHidden() bool {
 		return false
 	}
 	return im.hide()
+}
+
+// summaryEntry returns the summary title and value for this input field.
+func (im *inputModel) summaryEntry() (title, value string) {
+	if im.title == "" {
+		return "", ""
+	}
+	val := ""
+	if im.value != nil {
+		val = *im.value
+	}
+	return im.title, val
 }
 
 func (im *inputModel) isFocused() bool {

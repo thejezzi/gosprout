@@ -2,7 +2,8 @@ package template
 
 import (
 	"fmt"
-	"github.com/thejezzi/gosprout/cmd/sprout/cli"
+
+	"github.com/thejezzi/gosprout/internal/args"
 	"github.com/thejezzi/gosprout/internal/git"
 	"github.com/thejezzi/gosprout/internal/structure"
 )
@@ -12,10 +13,13 @@ import (
 type Template struct {
 	Name        string
 	description string
-	Create      func(args *cli.Arguments) error
+	Create      func(args *args.Arguments) error
 }
 
-func New(name, description string, create func(args *cli.Arguments) error) Template {
+func New(
+	name, description string,
+	create func(args *args.Arguments) error,
+) Template {
 	return Template{
 		Name:        name,
 		description: description,
@@ -29,19 +33,19 @@ func (t Template) FilterValue() string { return t.Name }
 
 // Template creation logic
 
-func simpleCreate(args *cli.Arguments) error {
+func simpleCreate(args *args.Arguments) error {
 	return structure.CreateNewModule(args)
 }
 
-func testCreate(args *cli.Arguments) error {
+func testCreate(args *args.Arguments) error {
 	return structure.CreateNewModuleWithTest(args)
 }
 
-func gitCreate(args *cli.Arguments) error {
-	if args.GitRepo == "" {
+func gitCreate(args *args.Arguments) error {
+	if args.GitRepo() == "" {
 		return fmt.Errorf("git repository URL cannot be empty")
 	}
-	if err := git.Clone(args.GitRepo, args.Path()); err != nil {
+	if err := git.Clone(args.GitRepo(), args.Path()); err != nil {
 		return err
 	}
 	if err := git.Reinit(args.Path()); err != nil {

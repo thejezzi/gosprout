@@ -7,12 +7,10 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/thejezzi/gosprout/cmd/sprout/cli"
 )
 
-func New() (*cli.Arguments, error) {
-	var module, projectPath, template, gitRepo string
-	var createMakefile bool
+func NewForm() (Form, error) {
+	m := &model{}
 
 	modulePrefixes := os.Getenv("GOSPROUT_MODULE_PREFIXES")
 	prefixes := []string{}
@@ -39,7 +37,7 @@ func New() (*cli.Arguments, error) {
 				}
 				return nil
 			},
-			Value:                 &module,
+			Value:                 &m.module,
 			DisablePromptRotation: modulePrefixes == "",
 		},
 		{
@@ -50,13 +48,13 @@ func New() (*cli.Arguments, error) {
 			Prompts:               []string{"~/tmp/"},
 			Focus:                 true,
 			DisablePromptRotation: true,
-			Value:                 &projectPath,
+			Value:                 &m.path,
 		},
 		{
 			Type:        ListType,
 			Title:       "Template",
 			Description: "Choose a template to quickly set up your project structure",
-			Value:       &template,
+			Value:       &m.template,
 		},
 		{
 			Type:          InputType,
@@ -65,9 +63,9 @@ func New() (*cli.Arguments, error) {
 			RotationTitle: "git prefix",
 			Placeholder:   "github.com/user/repo",
 			Prompts:       []string{"https://", "git@"},
-			Value:         &gitRepo,
+			Value:         &m.gitRepo,
 			Hide: func() bool {
-				return template != "Git"
+				return m.template != "Git"
 			},
 		},
 		{
@@ -77,33 +75,42 @@ func New() (*cli.Arguments, error) {
 				{
 					Type:          CheckboxType,
 					Description:   "Create a Makefile",
-					CheckboxValue: &createMakefile,
+					CheckboxValue: &m.createMakefile,
+				},
+				{
+					Type:          CheckboxType,
+					Description:   "Initialize a git repository",
+					CheckboxValue: &m.initGit,
 				},
 			},
 			Hide: func() bool {
-				return template == "Git"
+				return m.template == "Git"
 			},
 		},
 	}
 
-	err := CreateForm(fieldDefs)
+	ui, err := CreateForm(fieldDefs)
 	if err != nil {
 		return nil, err
 	}
 
-	return cli.NewArguments(
-		module,
-		projectPath,
-		template,
-		gitRepo,
-		createMakefile,
-	), nil
+	// Copy the fields into the model for later use
+	if mm, ok := ui.(*model); ok {
+		mm.module = m.module
+		mm.path = m.path
+		mm.template = m.template
+		mm.gitRepo = m.gitRepo
+		mm.createMakefile = m.createMakefile
+		mm.initGit = m.initGit
+		return mm, nil
+	}
+	return ui, nil
 }
 
-func Form(fields ...Field) error {
+func form(fields ...Field) (Form, error) {
 	m, err := newModel(fields...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer m.Cleanup()
 
@@ -112,8 +119,12 @@ func Form(fields ...Field) error {
 		os.Exit(1)
 	}
 	if m.aborted {
-		return errors.New("was aborted")
+		return m, errors.New("was aborted")
 	}
 
-	return nil
+	return m, nil
+}
+
+type summaryEntry interface {
+	summaryEntry() (string, string)
 }

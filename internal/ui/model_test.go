@@ -1,8 +1,9 @@
 package ui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
 	"testing"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type dummyField struct{}
@@ -34,7 +35,8 @@ func TestModelLineCount(t *testing.T) {
 		t.Fatalf("failed to create model: %v", err)
 	}
 	_ = m.View()
-	if m.LineCount() < 2 {
-		t.Errorf("expected at least 2 lines, got %d", m.LineCount())
+	var ui Form = m
+	if ui.LineCount() < 2 {
+		t.Errorf("expected at least 2 lines, got %d", ui.LineCount())
 	}
 }

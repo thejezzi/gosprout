@@ -93,9 +93,9 @@ func buildFields(fieldDefs []FieldDef) []Field {
 	return fields
 }
 
-func CreateForm(fieldDefs []FieldDef) error {
+func CreateForm(fieldDefs []FieldDef) (Form, error) {
 	fields := buildFields(fieldDefs)
-	return Form(fields...)
+	return form(fields...)
 }
 
 func createHeaderField(fd FieldDef) Field {

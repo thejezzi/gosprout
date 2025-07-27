@@ -74,7 +74,7 @@ func (hm *headerModel) isFocused() bool {
 }
 
 func (hm *headerModel) render() string {
-	return titleStyle.Render(hm.title) + "\n"
+	return TitleStyle.Render(hm.title) + "\n"
 }
 
 func (hm *headerModel) SetHide(hide func() bool) {

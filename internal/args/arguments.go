@@ -1,4 +1,4 @@
-package cli
+package args
 
 import (
 	"errors"
@@ -18,11 +18,12 @@ type Arguments struct {
 	name           string
 	path           string
 	template       string
-	GitRepo        string
+	gitRepo        string
 	createMakefile bool
+	initGit        bool
 }
 
-func NewArguments(moduleName, projectPath, template, gitRepo string, createMakefile bool) *Arguments {
+func NewArguments(moduleName, projectPath, template, gitRepo string, createMakefile, initGit bool) *Arguments {
 	if len(projectPath) == 0 {
 		projectPath = moduleName
 	}
@@ -33,12 +34,13 @@ func NewArguments(moduleName, projectPath, template, gitRepo string, createMakef
 		name:           moduleName,
 		path:           projectPath,
 		template:       template,
-		GitRepo:        gitRepo,
+		gitRepo:        gitRepo,
 		createMakefile: createMakefile,
+		initGit:        initGit,
 	}
 }
 
-// flags parses all flags and returns a structure with all possible arguments or
+// Flags parses all flags and returns a structure with all possible arguments or
 // and error that indicates to use the ui mode
 func Flags() (*Arguments, error) {
 	name := flag.String(
@@ -69,9 +71,14 @@ func Flags() (*Arguments, error) {
 		false,
 		"create a Makefile",
 	)
+	initGit := flag.Bool(
+		"init-git",
+		true,
+		"initialize a new git repository (default: true)",
+	)
 	flag.Parse()
 
-	return NewArguments(*name, *path, *template, *gitRepo, *createMakefile).validate()
+	return NewArguments(*name, *path, *template, *gitRepo, *createMakefile, *initGit).validate()
 }
 
 // validate make sure that all arguments are set to create the project
@@ -89,21 +96,12 @@ func (args *Arguments) validate() (*Arguments, error) {
 	return args, nil
 }
 
-func (args Arguments) Name() string {
-	return args.name
-}
-
-func (args Arguments) Path() string {
-	return args.path
-}
-
-func (args Arguments) Template() string {
-	return args.template
-}
-
-func (args Arguments) CreateMakefile() bool {
-	return args.createMakefile
-}
+func (a *Arguments) Name() string         { return a.name }
+func (a *Arguments) Path() string         { return a.path }
+func (a *Arguments) Template() string     { return a.template }
+func (a *Arguments) CreateMakefile() bool { return a.createMakefile }
+func (a *Arguments) GitRepo() string      { return a.gitRepo }
+func (a *Arguments) InitGit() bool        { return a.initGit }
 
 func (args Arguments) IsEmpty() bool {
 	if len(args.name) == 0 {

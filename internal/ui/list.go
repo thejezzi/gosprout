@@ -117,7 +117,7 @@ func (lm *listModel) render() string {
 	v := strings.Builder{}
 
 	if !lm.focused {
-		v.WriteString(titleStyle.Render(lm.listTitle) + "\n")
+		v.WriteString(TitleStyle.Render(lm.listTitle) + "\n")
 		v.WriteString(lm.renderCurrentSelection())
 		v.WriteRune('\n')
 		v.WriteRune('\n')
@@ -175,6 +175,18 @@ func (lm *listModel) update(msg tea.Msg) tea.Cmd {
 
 func (lm *listModel) setWidth(width int) {
 	lm.inner.SetSize(width, lm.inner.Height())
+}
+
+// summaryEntry returns the summary title and value for this list field.
+func (lm *listModel) summaryEntry() (title, value string) {
+	if lm.listTitle == "" {
+		return "", ""
+	}
+	val := ""
+	if lm.outerValue != nil {
+		val = *lm.outerValue
+	}
+	return lm.listTitle, val
 }
 
 func (lm *listModel) isFocused() bool {

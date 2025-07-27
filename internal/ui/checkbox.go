@@ -97,6 +97,23 @@ func (cm *checkboxModel) update(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
+// summaryEntry returns the summary title and value for this checkbox field.
+func (cm *checkboxModel) summaryEntry() (title, value string) {
+	t := cm.description
+	if t == "" {
+		t = cm.title
+	}
+	val := ""
+	if cm.value != nil {
+		if *cm.value {
+			val = "Yes"
+		} else {
+			val = "No"
+		}
+	}
+	return t, val
+}
+
 func (cm *checkboxModel) isFocused() bool {
 	return cm.focused
 }
@@ -125,7 +142,7 @@ func (cm *checkboxModel) render() string {
 		s.WriteString(check + " " + desc)
 	}
 
-	s.WriteString("\n\n")
+	s.WriteString("\n")
 	return s.String()
 }
 
