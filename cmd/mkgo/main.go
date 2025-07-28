@@ -43,17 +43,26 @@ func run() error {
 		return err
 	}
 
+	var templ template.Template
+	found := false
 	for _, t := range template.All {
 		if t.Name == args.Template() {
-			err := t.Create(args)
-			if err != nil {
-				return err
-			}
-			return nil
+			found = true
+			templ = t
+			break
 		}
 	}
 
-	return fmt.Errorf("template not found: %s", args.Template())
+	if !found {
+		return fmt.Errorf("template not found: %s", args.Template())
+	}
+
+	if err := templ.Create(args); err != nil {
+		return err
+	}
+
+	fmt.Println(ui.SummaryFromArguments(args))
+	return nil
 }
 
 func main() {

@@ -44,10 +44,6 @@ func dynamicMakefileContent(mainGoRelPath string) string {
 	)
 }
 
-const (
-	_templateSimple = "simple"
-)
-
 type gomodData []byte // go.mod file contents
 
 func newGoMod(moduleName string) (gomodData, error) {
