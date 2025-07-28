@@ -64,7 +64,7 @@ func newModel(fields ...Field) (*model, error) {
 func (m *model) Cleanup() {
 	lines := m.LineCount()
 	if lines > 0 {
-		for i := 0; i < lines; i++ {
+		for i := 1; i < lines; i++ {
 			// Move cursor up and clear line
 			fmt.Print("\033[2K\033[A")
 		}
