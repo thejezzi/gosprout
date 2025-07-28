@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/thejezzi/mkgo/internal/args"
 	"github.com/thejezzi/mkgo/internal/git"
@@ -34,11 +35,29 @@ func (t Template) FilterValue() string { return t.Name }
 // Template creation logic
 
 func simpleCreate(args *args.Arguments) error {
-	return structure.CreateNewModule(args)
+	err := structure.CreateNewModule(args)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func testCreate(args *args.Arguments) error {
-	return structure.CreateNewModuleWithTest(args)
+	if err := structure.CreateNewModuleWithTest(args); err != nil {
+		return err
+	}
+
+	if args.InitGit() {
+		cmd := exec.Command("git", "init")
+		cmd.Dir = args.Path()
+		err := cmd.Run()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func gitCreate(args *args.Arguments) error {
