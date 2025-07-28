@@ -95,8 +95,29 @@ func (args *Arguments) validate() (*Arguments, error) {
 	return args, nil
 }
 
-func (a *Arguments) Name() string         { return a.name }
-func (a *Arguments) Path() string         { return a.path }
+func (a *Arguments) Name() string { return a.name }
+func (a *Arguments) Path() string {
+	return expandHome(a.path)
+}
+
+// expandHome expands ~ or ~/ to the user's home directory.
+func expandHome(path string) string {
+	if path == "~" {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			return home
+		}
+		return path
+	}
+	if len(path) > 2 && path[:2] == "~/" {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			return home + path[1:]
+		}
+		return path
+	}
+	return path
+}
 func (a *Arguments) Template() string     { return a.template }
 func (a *Arguments) CreateMakefile() bool { return a.createMakefile }
 func (a *Arguments) GitRepo() string      { return a.gitRepo }
