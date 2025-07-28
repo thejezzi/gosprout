@@ -43,12 +43,6 @@ func NewArguments(moduleName, projectPath, template, gitRepo string, createMakef
 // Flags parses all flags and returns a structure with all possible arguments or
 // and error that indicates to use the ui mode
 func Flags() (*Arguments, error) {
-	name := flag.String(
-		"module",
-		"",
-		"your module name or path like github.com/you/proj",
-	)
-
 	path := flag.String(
 		"path",
 		"",
@@ -57,7 +51,7 @@ func Flags() (*Arguments, error) {
 
 	template := flag.String(
 		"template",
-		"simple",
+		"Simple",
 		"specify a template to avoid some boilerplate setup",
 	)
 
@@ -73,12 +67,17 @@ func Flags() (*Arguments, error) {
 	)
 	initGit := flag.Bool(
 		"init-git",
-		true,
+		false,
 		"initialize a new git repository (default: true)",
 	)
 	flag.Parse()
 
-	return NewArguments(*name, *path, *template, *gitRepo, *createMakefile, *initGit).validate()
+	name := flag.Arg(0)
+	if len(name) == 0 {
+		return nil, errors.New("the module needs a name")
+	}
+
+	return NewArguments(name, *path, *template, *gitRepo, *createMakefile, *initGit).validate()
 }
 
 // validate make sure that all arguments are set to create the project
