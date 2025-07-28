@@ -40,7 +40,7 @@ func NewArguments(moduleName, projectPath, template, gitRepo string, createMakef
 	}
 }
 
-// Flags parses all flags and returns a structure with all possible arguments or
+// Flags parses all flags and returns a struct with all possible arguments or
 // and error that indicates to use the ui mode
 func Flags() (*Arguments, error) {
 	path := flag.String(

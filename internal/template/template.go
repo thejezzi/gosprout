@@ -6,7 +6,6 @@ import (
 
 	"github.com/thejezzi/mkgo/internal/args"
 	"github.com/thejezzi/mkgo/internal/git"
-	"github.com/thejezzi/mkgo/internal/structure"
 )
 
 // Template struct and methods
@@ -35,7 +34,7 @@ func (t Template) FilterValue() string { return t.Name }
 // Template creation logic
 
 func simpleCreate(args *args.Arguments) error {
-	err := structure.CreateNewModule(args)
+	err := CreateNewModule(args)
 	if err != nil {
 		return err
 	}
@@ -44,7 +43,7 @@ func simpleCreate(args *args.Arguments) error {
 }
 
 func testCreate(args *args.Arguments) error {
-	if err := structure.CreateNewModuleWithTest(args); err != nil {
+	if err := CreateNewModuleWithTest(args); err != nil {
 		return err
 	}
 
@@ -70,7 +69,7 @@ func gitCreate(args *args.Arguments) error {
 	if err := git.Reinit(args.Path()); err != nil {
 		return err
 	}
-	return structure.ReplaceModuleName(args.Path(), args.Name())
+	return ReplaceModuleName(args.Path(), args.Name())
 }
 
 // Template definitions
@@ -78,7 +77,7 @@ func gitCreate(args *args.Arguments) error {
 var (
 	Simple = New(
 		"Simple",
-		"A simple structure with a cmd folder",
+		"A simple template with a cmd folder",
 		simpleCreate,
 	)
 	Test = New(
